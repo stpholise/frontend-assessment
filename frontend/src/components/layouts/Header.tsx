@@ -1,0 +1,10 @@
+const Header = () => {
+  return (
+    <div className="w-full sticky top-0 left-0 right-0 bg-white pl-99 pr-24 py-4 flex justify-between">
+      <h1 className="text-black font-bold">Test App</h1>
+      <div className="">cart</div>
+    </div>
+  );
+};
+
+export default Header;
