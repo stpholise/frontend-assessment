@@ -8,7 +8,7 @@ function App() {
   return (
     <>
       <Router>
-        <div className="bg-[#f9f9f9] h-screen w-screen">
+        <div className="bg-[#f9f9f9] ">
           <Header />
           <Sidebar />
           <Routes>

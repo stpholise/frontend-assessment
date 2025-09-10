@@ -1,6 +1,6 @@
 const Sidebar = () => {
   return (
-    <div className="w-56 bg-white h-full px-4 py-4 fixed left-0 flex flex-col gap-4">
+    <div className="w-56 bg-white h-full px-4 py-4 fixed top-0 pt-17 left-0 flex flex-col gap-4">
       <p className=""> All</p>
 
       {navigationList.map((item, index) => (
