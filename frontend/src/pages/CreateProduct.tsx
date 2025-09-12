@@ -1,14 +1,9 @@
-import {
-  Formik,
-  Form,
-  Field,
-  ErrorMessage,
-  type FormikHelpers, 
-} from "formik";
+import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from "formik";
 import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { useState } from "react";
 import clsx from "clsx";
+import { useCreateProduct } from "../components/hooks/useCreatProduct";
 
 interface valuesType {
   id: number;
@@ -20,12 +15,13 @@ interface valuesType {
   stock: number;
   description: string;
   imageUrl: string;
-  specifications: Record<string, string | number | boolean>;
+  specifications?: Record<string, string | number | boolean>;
   rating?: number;
   reviews?: number;
 }
 
 const CreateProduct = () => {
+  const { createProduct, isLoading, error } = useCreateProduct();
   const navigate = useNavigate();
   const [specifications, setSpecifications] = useState<
     { key: string; value: string | number | boolean }[]
@@ -34,7 +30,7 @@ const CreateProduct = () => {
     useState<Record<string, string | number | boolean>>();
 
   const initialValues: valuesType = {
-    id: 0,
+    id:0,
     name: "",
     brand: "",
     category: "",
@@ -47,19 +43,24 @@ const CreateProduct = () => {
   };
 
   const validationSchema = Yup.object({
-    name: Yup.string().required("Product name is Required"),
-    brand: Yup.string().required("Required"),
-    category: Yup.string().required("Required"),
-    subCategory: Yup.string().required("Required"),
-    price: Yup.number().required("Required"),
-    stock: Yup.number().required("Required"),
-    description: Yup.string().required("Required"),
-    imageUrl: Yup.string().required("Required"),
-    // specifications: Yup.object().test(
-    //   "not-empty",
-    //   "At least one specification required",
-    //   (obj) => obj && Object.keys(obj).length > 0
-    // ),
+    name: Yup.string().required("Name is required and must be a string"),
+    brand: Yup.string().required("Brand is required and must be a string"),
+    category: Yup.string().required(
+      "Category is required and must be a string"
+    ),
+    subCategory: Yup.string().required(
+      "SubCategory is required and must be a string"
+    ),
+    price: Yup.number()
+      .min(1, "Price must be greater than 0")
+      .required("Price is required and must be a positive number"),
+    stock: Yup.number()
+      .min(0, "Stock cannot be negative")
+      .required("Stock is required and must be a non-negative integer"),
+    description: Yup.string().required(
+      "Description is required and must be a string"
+    ),
+    imageUrl: Yup.string().url("Must be a valid URL").required("Required"),
   });
 
   const handleSpecification = (index: number) => {
@@ -84,40 +85,48 @@ const CreateProduct = () => {
     setSpecifications([...specifications, { key: "", value: "" }]);
     const obj = Object.fromEntries(
       specifications
-        .filter((item) => item.key && item.value) // skip empties
+        .filter((item) => item.key && item.value) 
         .map((item) => [item.key, item.value])
     );
 
     setSpecObj(obj);
-    console.log(obj);
   };
 
   const removeSpecification = (index: number) => {
     setSpecifications(specifications.filter((_, i) => i !== index));
     const obj = Object.fromEntries(
       specifications
-        .filter((item) => item.key && item.value) // skip empties
+        .filter((item) => item.key && item.value)  
         .map((item) => [item.key, item.value])
     );
 
     setSpecObj(obj);
-    console.log(obj);
   };
 
-  const onSubmit = (value: valuesType, formik: FormikHelpers<valuesType>) => {
-    formik.resetForm();
-    setSpecifications([{ key: "", value: "" }]);
-    console.log(specifications);
-    console.log(value);
-    console.log(formik);
+  const onSubmit = async (
+    value: valuesType,
+    formik: FormikHelpers<valuesType>
+  ) => {
+    try {
+      await createProduct({ ...value, specifications: specObj });
+      formik.resetForm();
+      setSpecifications([{ key: "", value: "" }]);
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const textSpecification = () => {
-    console.log(specifications);
+  const cancelCreateProduct = () => {
+    navigate("/");
   };
 
   return (
     <div className="pb-4">
+      {error && <div className="text-red-500 mb-2">{error.message}</div>}
+      {isLoading && (
+        <div className="text-gray-700 mb-2">Creating product...</div>
+      )}
       <h2 className="font-semibold text-2xl mb-4">Create New Product</h2>
       <div className=" w-full rounded-xl bg-white ">
         <div className=" px-4 py-4 flex justify-between">
@@ -135,7 +144,7 @@ const CreateProduct = () => {
           onSubmit={onSubmit}
           validationSchema={validationSchema}
         >
-          {({ setFieldValue }) => (
+          {({ isValid, isSubmitting }) => (
             <Form>
               <div className=" flex flex-col gap-4 px-6">
                 <div className=" grid grid-cols-2 gap-4">
@@ -211,15 +220,8 @@ const CreateProduct = () => {
                       Price
                     </label>
                     <Field
-                      type="text"
+                      type="number"
                       name="price"
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        const numericalValue = e.target.value.replace(
-                          /\D/g,
-                          ""
-                        );
-                        setFieldValue("price", numericalValue);
-                      }}
                       placeholder="Price"
                       className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
                     />
@@ -360,9 +362,14 @@ const CreateProduct = () => {
 
                 <footer className="flex justify-between mb-4">
                   <button
+                    disabled={isSubmitting || !isValid || isLoading}
                     type="submit"
                     className={clsx(
-                      "bg-slate-900 text-white font-medium  text-sm flex items-center justify-center  rounded-sm h-8 w-fit px-3"
+                      " text-white font-medium  text-sm flex items-center justify-center  rounded-sm h-8 w-fit px-3",
+                      {
+                        "bg-gray-400": isSubmitting || !isValid || isLoading,
+                        "bg-slate-900": !isSubmitting || isValid || !isLoading,
+                      }
                     )}
                   >
                     Create Product
@@ -372,7 +379,7 @@ const CreateProduct = () => {
                     className={clsx(
                       "text-slate-900 bg-white font-medium border border-gray-200  text-sm flex items-center justify-center  rounded-sm h-8 w-20"
                     )}
-                    onClick={() => textSpecification}
+                    onClick={cancelCreateProduct}
                   >
                     Cancel
                   </button>
