@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { useState } from "react";
 import clsx from "clsx";
-import { useCreateProduct } from "../components/hooks/useCreatProduct";
+import {
+  useCreateProduct,
+  useUpdateProduct,
+} from "../components/hooks/useCreatProduct";
 
 interface valuesType {
-  id: number;
+  id: number | undefined;
   name: string;
   brand: string;
   category: string;
@@ -26,23 +29,27 @@ interface CreateProductProps {
 
 const CreateProduct = ({ product }: CreateProductProps) => {
   const isEdit = Boolean(product);
-  const { createProduct, isLoading, error } = useCreateProduct();
   const navigate = useNavigate();
-
+  const { createProduct, isLoading, error } = useCreateProduct();
+  const {
+    updateProduct,
+    isLoading: isUpdating,
+    error: updateError,
+  } = useUpdateProduct(); 
   const [specifications, setSpecifications] = useState<
     Record<string, string | number | boolean>
   >(product?.specifications ?? { "": "" });
 
   const initialValues: valuesType = {
-    id: 0,
-    name: "",
-    brand: "",
-    category: "",
-    subCategory: "",
-    price: 0,
-    stock: 0,
-    description: "",
-    imageUrl: "",
+    id: product?.id,
+    name: product?.name || "",
+    brand: product?.brand || "",
+    category: product?.category || "",
+    subCategory: product?.subCategory || "",
+    price: product?.price || 0,
+    stock: product?.stock || 0,
+    description: product?.description || "",
+    imageUrl: product?.imageUrl || "",
     specifications: {},
   };
 
@@ -67,41 +74,70 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     imageUrl: Yup.string().url("Must be a valid URL").required("Required"),
   });
 
-  const handleSpecification = (index: number) => {
-    if (index + 1 === specifications.length) {
-      addSpecification(`key${Object.keys(specifications).length + 1}`, "");
-    } else {
-      removeSpecification(`key${index + 1}`);
+  const updateSpecificationKey = (oldKey: string, newKey: string) => {
+    const updated = { ...specifications };
+    if (oldKey === newKey) return;
+    if (newKey in updated) {
+      return;
     }
+    const value = updated[oldKey];
+    delete updated[oldKey];
+    updated[newKey] = value;
+
+    setSpecifications(updated);
   };
 
-  const addSpecification = (key: string, value: string | number | boolean) => {
-    setSpecifications((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const updateSpecification = (
+  const updateSpecificationValue = (
     key: string,
     newValue: string | number | boolean
   ) => {
-    setSpecifications((prev) => ({ ...prev, [key]: newValue }));
+    const updated = { ...specifications };
+    updated[key] = newValue;
+    setSpecifications(updated);
+  };
+
+  const addSpecification = () => {
+    setSpecifications({
+      ...specifications,
+      "": "",
+    });
   };
 
   const removeSpecification = (key: string) => {
-    const { [key]: _, ...rest } = specifications;
-    setSpecifications(rest);
+    const updated = { ...specifications };
+    delete updated[key];
+    setSpecifications(updated);
   };
 
   const onSubmit = async (
     values: valuesType,
     formik: FormikHelpers<valuesType>
   ) => {
-    try {
-      await createProduct({ ...values, specifications }); // pass object directly
-      formik.resetForm();
-      setSpecifications({});
-      navigate("/");
-    } catch (err) {
-      console.error(err);
+    if (isEdit && product?.id) {
+      try {
+        formik.setSubmitting(true);
+        await updateProduct(product?.id, { ...values, specifications });
+        formik.resetForm();
+        setSpecifications({});
+      } catch (err) {
+        console.error(err);
+      }
+      finally {
+        formik.setSubmitting(false);
+      }
+    } else {
+      try {
+        formik.setSubmitting(true);
+        await createProduct({ ...values, specifications }); // pass object directly
+        formik.resetForm();
+        setSpecifications({});
+        navigate("/");
+      } catch (err) {
+        console.error(err);
+      }
+      finally {
+        formik.setSubmitting(false);
+      }
     }
   };
 
@@ -115,10 +151,20 @@ const CreateProduct = ({ product }: CreateProductProps) => {
       {isLoading && (
         <div className="text-gray-700 mb-2">Creating product...</div>
       )}
-      <h2 className="font-semibold text-2xl mb-4">Create New Product</h2>
+      {updateError && (
+        <div className="text-red-500 mb-2">{updateError.message}</div>
+      )}
+      {isUpdating && (
+        <div className="text-gray-700 mb-2">Updating product...</div>
+      )}
+      <h2 className="font-semibold text-2xl mb-4">
+        {isEdit ? "Edit Product" : "Create New Product"}
+      </h2>
       <div className=" w-full rounded-xl bg-white ">
         <div className=" px-4 py-4 flex justify-between">
-          <h3 className="font-medium text-xl">Create New Product</h3>
+          <h3 className="font-medium text-xl">
+            {isEdit ? "Edit Product" : "Create New Product"}
+          </h3>
           <button
             onClick={() => navigate("/")}
             className="text-black font-semibold"
@@ -270,12 +316,23 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                 </div>
                 <div className=" w-full ">
                   <div className="w-full   ">
-                    <label
-                      htmlFor="specifications"
-                      className="font-medium text-sm "
-                    >
-                      Specifications
-                    </label>
+                    <div className=" flex justify-between items-center">
+                      <label
+                        htmlFor="specifications"
+                        className="font-medium text-sm "
+                      >
+                        Specifications
+                      </label>
+                      {Object.keys(specifications).length === 0 && (
+                        <button
+                          type="button"
+                          onClick={addSpecification}
+                          className="bg-green-600 text-white font-medium text-sm rounded-sm h-8 w-12"
+                        >
+                          Add Specifications
+                        </button>
+                      )}
+                    </div>
                     {Object.entries(specifications).map(
                       ([key, value], index) => (
                         <div
@@ -291,14 +348,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                                 onChange={(
                                   e: React.ChangeEvent<HTMLInputElement>
                                 ) => {
-                                  const newKey = e.target.value;
-
-                                  const { [key]: oldValue, ...rest } =
-                                    specifications;
-                                  setSpecifications({
-                                    ...rest,
-                                    [newKey]: oldValue,
-                                  });
+                                  updateSpecificationKey(key, e.target.value);
                                 }}
                                 placeholder="Key"
                                 className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
@@ -316,7 +366,9 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                                 name={`specifications[${index}].value`}
                                 onChange={(
                                   e: React.ChangeEvent<HTMLInputElement>
-                                ) => updateSpecification(key, e.target.value)}
+                                ) =>
+                                  updateSpecificationValue(key, e.target.value)
+                                }
                                 placeholder="value"
                                 className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
                               />
@@ -327,18 +379,23 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                               />
                             </div>{" "}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleSpecification(index)}
-                            className={clsx(
-                              "bg-slate-900 text-white font-medium  text-sm flex items-center justify-center  rounded-sm h-8",
-                              index + 1 === specifications.length
-                                ? "w-12"
-                                : "w-18"
-                            )}
-                          >
-                            {index === specifications.length ? "Add" : "Remove"}
-                          </button>
+                          {index === Object.keys(specifications).length - 1 ? (
+                            <button
+                              type="button"
+                              onClick={addSpecification}
+                              className="bg-slate-900 text-white font-medium text-sm rounded-sm h-8 w-12"
+                            >
+                              Add
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => removeSpecification(key)}
+                              className="bg-red-600 text-white font-medium text-sm rounded-sm h-8 w-18"
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
                       )
                     )}
@@ -357,7 +414,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                       }
                     )}
                   >
-                    Create Product
+                    {isEdit ? "Update Product" : "Create Product"}
                   </button>
                   <button
                     type="button"

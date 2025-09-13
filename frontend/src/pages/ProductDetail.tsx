@@ -4,10 +4,17 @@ import { useFetchAProduct } from "../components/hooks/useFetchProducts";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../store/slices/CartSlice";
 // import { type Product } from "../components/hooks/useFetchProducts";
+import { useNavigate } from "react-router-dom";
+import { useDeleteProduct } from "../components/hooks/useCreatProduct";
 
 const ProductDetail = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const {
+    deleteProduct,
+    isLoading: isDeleting,
+    error: deleteError,
+  } = useDeleteProduct();
   const { id } = useParams();
 
   const { product, error, isLoading } = useFetchAProduct({ id: Number(id) });
@@ -19,13 +26,29 @@ const ProductDetail = () => {
     dispatch(addToCart({ ...product }));
     console.log("Added to cart", product);
   };
+  const goToEdit = () => {
+    navigate(`/products/edit/${product.id}`, { state: { product } });
+  };
+
+  const deleteProductById = async (id: number) => {
+    try {
+      await deleteProduct(id);
+      navigate("/");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };
 
   return (
     <div className="w-full   rounded-lg px-4 py-4">
+      {isDeleting && <p className="text-blue-500">Deleting product...</p>}
+      {deleteError && (
+        <p className="text-red-500">Error: {deleteError.message}</p>
+      )}
       <h2 className="text-xl font-medium my-2">Product Detail</h2>
       <div className="rounded-lg border border-gray-200 shadow overflow-hidden">
         <div className="bg-white w-full h-12 py-3 px-4 border border-gray-100 rounded-t-lg">
-          <button className="text-black text-sm font-medium">
+          <button onClick={() => navigate("/") } className="text-black text-sm font-medium">
             Back to Products
           </button>
         </div>
@@ -63,8 +86,9 @@ const ProductDetail = () => {
               </p>
               {Object.entries(product.specifications).map(([key, value]) => (
                 <div key={key} className="flex justify-start gap-2 py-0.5">
-                  <span className="text-xs text-gray-700 font-semibold">
-                    {key} :
+                  <span className="text-xs text-gray-700 font-semibold first-letter:capitalize"> 
+          
+                    {key && `${key}:`}
                   </span>
                   <span className="text-xs text-gray-500 font-medium">
                     {value}
@@ -80,10 +104,16 @@ const ProductDetail = () => {
               >
                 Add to Cart
               </button>
-              <button className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg">
+              <button
+                onClick={goToEdit}
+                className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg"
+              >
                 Edit Product
               </button>
-              <button className="bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-lg">
+              <button
+                onClick={() => deleteProductById(product.id)}
+                className="bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-lg"
+              >
                 Delete Product
               </button>
             </div>

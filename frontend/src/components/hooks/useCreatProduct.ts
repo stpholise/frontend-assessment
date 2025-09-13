@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-interface ValuesType {
+interface Product {
   id?: number;
   name: string;
   brand: string;
@@ -19,7 +19,7 @@ export const useCreateProduct = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const createProduct = async (product: ValuesType) => {
+  const createProduct = async (product: Product) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -34,7 +34,7 @@ export const useCreateProduct = () => {
         throw new Error(data.error?.message || "Failed to create product");
       }
 
-      const created = await res.json(); 
+      const created = await res.json();
       return created;
     } catch (err) {
       if (err instanceof Error) {
@@ -47,4 +47,73 @@ export const useCreateProduct = () => {
   };
 
   return { createProduct, isLoading, error };
+};
+
+export const useUpdateProduct = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const updateProduct = async (id: number, product: Product) => {
+    setIsLoading(true);
+    setError(null);
+    const url = `http://localhost:3000/api/products/${id}`;
+    try {
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(product),
+      });
+
+      if (!response.ok) {
+         const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to update product");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  return { updateProduct, isLoading, error };
+};
+
+
+export const useDeleteProduct = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const deleteProduct = async (id: number) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to delete product");
+      }
+
+        if (response.status === 204) {
+      return { message: "Product deleted successfully" };
+    }
+
+      return await response.json();
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { deleteProduct, isLoading, error };
 };

@@ -8,6 +8,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./components/Cart";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store";
+import EditProduct from "./pages/EditProduct";
 
 function App() {
   const isCartOpen = useSelector((state: RootState) => state.cart.isCartOpen);
@@ -24,6 +25,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/products/create" element={<CreateProduct />} />
+              <Route path="/products/edit/:id" element={<EditProduct />} />
               <Route path="/product/:id" element={<ProductDetail />} />
             </Routes>
           </div>
