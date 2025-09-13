@@ -30,7 +30,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           star image {rating} ({reviews} reviews){" "}
         </div>
         <p className="font-medium lg:text-lg">${price}</p>
-        <button onClick={handleAddToCart} className="cart bg-slate-900 rounded-sm text-white text-sm font-medium text-center w-full mt-auto  cursor-pointer block h-6">
+        <button onClick={handleAddToCart} className="cart bg-slate-900 rounded-sm text-white text-sm font-medium text-center w-full mt-auto  cursor-pointer  h-6   flex itemsc-center justify-center">
           Add to Cart
         </button>
       </div>

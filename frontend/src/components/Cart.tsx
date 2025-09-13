@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../store";
-import { addToCart, closeCart } from "../store/slices/CartSlice";
+import { addToCart, closeCart, reduceItem , removeFromCart } from "../store/slices/CartSlice";
 
 const Cart = () => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
@@ -24,22 +24,44 @@ const Cart = () => {
         </p>
         <div className="flex flex-col space-y-4">
           {cartItems.map((item, index) => (
-            <div key={index} className="flex items-center space-x-4">
+            <div key={index} className="flex items-center space-x-2">
               <img
                 src={item.product.imageUrl}
                 alt={item.product.name}
-                className="w-16 h-16 object-cover rounded"
+                className="max-w-14 max-h-16 size-14 object-cover rounded"
               />
               <div className="flex-1">
-                <h3 className="font-medium text-sm">{item.product.name}</h3>
+                <h3 className="font-medium text-xs">{item.product.name}</h3>
                 <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                 <p className="text-sm font-semibold">${item.product.price}</p>
+              </div>
+              <div className="">
+                <button
+                  disabled={item.quantity === 1}
+                  onClick={() => dispatch(reduceItem({ ...item.product }))}
+                  className="bg-slate-900 text-white text-xs font-medium px-2 py-1 rounded"
+                >
+                 -
+                </button>
+                <span className="text-xs text-gray-500">{item.quantity}</span>
+                <button
+                  onClick={() => dispatch(addToCart({ ...item.product }))}
+                  className="bg-slate-900 text-white text-xs font-medium px-2 py-1 rounded"
+                >
+                 +
+                </button>
+                <button
+                  onClick={() => dispatch(removeFromCart({ ...item.product }))}
+                  className="bg-slate-900 text-white text-xs font-medium px-2 py-1 rounded"
+                >
+                 x
+                </button>
               </div>
             </div>
           ))}
         </div>
         <div className="mt-4">
-          <button className="bg-slate-900 text-white font-medium text-sm px-4 py-2 rounded">
+          <button className="bg-slate-900 text-white font-medium text-sm px-4 py-2 w-full h-8 rounded flex items-center justify-center">
             Proceed to Checkout
           </button>
         </div>
