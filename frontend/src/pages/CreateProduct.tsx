@@ -20,17 +20,21 @@ interface valuesType {
   reviews?: number;
 }
 
-const CreateProduct = () => {
+interface CreateProductProps {
+  product?: valuesType;
+}
+
+const CreateProduct = ({ product }: CreateProductProps) => {
+  const isEdit = Boolean(product);
   const { createProduct, isLoading, error } = useCreateProduct();
   const navigate = useNavigate();
+
   const [specifications, setSpecifications] = useState<
-    { key: string; value: string | number | boolean }[]
-  >([{ key: "", value: "" }]);
-  const [specObj, setSpecObj] =
-    useState<Record<string, string | number | boolean>>();
+    Record<string, string | number | boolean>
+  >(product?.specifications ?? { "": "" });
 
   const initialValues: valuesType = {
-    id:0,
+    id: 0,
     name: "",
     brand: "",
     category: "",
@@ -65,52 +69,36 @@ const CreateProduct = () => {
 
   const handleSpecification = (index: number) => {
     if (index + 1 === specifications.length) {
-      addSpecification();
+      addSpecification(`key${Object.keys(specifications).length + 1}`, "");
     } else {
-      removeSpecification(index);
+      removeSpecification(`key${index + 1}`);
     }
   };
 
-  const handleSpecificationChange = (
-    index: number,
-    field: "key" | "value",
-    newValue: string
+  const addSpecification = (key: string, value: string | number | boolean) => {
+    setSpecifications((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateSpecification = (
+    key: string,
+    newValue: string | number | boolean
   ) => {
-    const updated = [...specifications];
-    updated[index][field] = newValue;
-    setSpecifications(updated);
+    setSpecifications((prev) => ({ ...prev, [key]: newValue }));
   };
 
-  const addSpecification = () => {
-    setSpecifications([...specifications, { key: "", value: "" }]);
-    const obj = Object.fromEntries(
-      specifications
-        .filter((item) => item.key && item.value) 
-        .map((item) => [item.key, item.value])
-    );
-
-    setSpecObj(obj);
-  };
-
-  const removeSpecification = (index: number) => {
-    setSpecifications(specifications.filter((_, i) => i !== index));
-    const obj = Object.fromEntries(
-      specifications
-        .filter((item) => item.key && item.value)  
-        .map((item) => [item.key, item.value])
-    );
-
-    setSpecObj(obj);
+  const removeSpecification = (key: string) => {
+    const { [key]: _, ...rest } = specifications;
+    setSpecifications(rest);
   };
 
   const onSubmit = async (
-    value: valuesType,
+    values: valuesType,
     formik: FormikHelpers<valuesType>
   ) => {
     try {
-      await createProduct({ ...value, specifications: specObj });
+      await createProduct({ ...values, specifications }); // pass object directly
       formik.resetForm();
-      setSpecifications([{ key: "", value: "" }]);
+      setSpecifications({});
       navigate("/");
     } catch (err) {
       console.error(err);
@@ -288,75 +276,72 @@ const CreateProduct = () => {
                     >
                       Specifications
                     </label>
-                    {specifications.map((spec, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-2 w-full items-start my-1"
-                      >
-                        <div className="flex gap-2 w-11/12 ">
-                          <div className=" flex flex-col gap-2 w-1/2">
-                            <Field
-                              type="text"
-                              value={spec.key}
-                              name={`specifications[${index}].key`}
-                              onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>
-                              ) =>
-                                handleSpecificationChange(
-                                  index,
-                                  "key",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Key"
-                              className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
-                            />
-                            <ErrorMessage
-                              name="specifications"
-                              component={"div"}
-                              className="text-red-500 text-xs"
-                            />
-                          </div>
-                          <div className=" flex flex-col gap-2 w-1/2">
-                            <Field
-                              type="text"
-                              value={spec.value}
-                              name={`specifications[${index}].value`}
-                              onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>
-                              ) =>
-                                handleSpecificationChange(
-                                  index,
-                                  "value",
-                                  e.target.value.toString()
-                                )
-                              }
-                              placeholder="value"
-                              className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
-                            />
-                            <ErrorMessage
-                              name="specifications"
-                              component={"div"}
-                              className="text-red-500 text-xs"
-                            />
-                          </div>{" "}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleSpecification(index)}
-                          className={clsx(
-                            "bg-slate-900 text-white font-medium  text-sm flex items-center justify-center  rounded-sm h-8",
-                            index + 1 === specifications.length
-                              ? "w-12"
-                              : "w-18"
-                          )}
+                    {Object.entries(specifications).map(
+                      ([key, value], index) => (
+                        <div
+                          key={index}
+                          className="flex gap-2 w-full items-start my-1"
                         >
-                          {index + 1 === specifications.length
-                            ? "Add"
-                            : "Remove"}
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex gap-2 w-11/12 ">
+                            <div className=" flex flex-col gap-2 w-1/2">
+                              <Field
+                                type="text"
+                                value={key}
+                                name={`specifications[${index}].key`}
+                                onChange={(
+                                  e: React.ChangeEvent<HTMLInputElement>
+                                ) => {
+                                  const newKey = e.target.value;
+
+                                  const { [key]: oldValue, ...rest } =
+                                    specifications;
+                                  setSpecifications({
+                                    ...rest,
+                                    [newKey]: oldValue,
+                                  });
+                                }}
+                                placeholder="Key"
+                                className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
+                              />
+                              <ErrorMessage
+                                name="specifications"
+                                component={"div"}
+                                className="text-red-500 text-xs"
+                              />
+                            </div>
+                            <div className=" flex flex-col gap-2 w-1/2">
+                              <Field
+                                type="text"
+                                value={value}
+                                name={`specifications[${index}].value`}
+                                onChange={(
+                                  e: React.ChangeEvent<HTMLInputElement>
+                                ) => updateSpecification(key, e.target.value)}
+                                placeholder="value"
+                                className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
+                              />
+                              <ErrorMessage
+                                name="specifications"
+                                component={"div"}
+                                className="text-red-500 text-xs"
+                              />
+                            </div>{" "}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleSpecification(index)}
+                            className={clsx(
+                              "bg-slate-900 text-white font-medium  text-sm flex items-center justify-center  rounded-sm h-8",
+                              index + 1 === specifications.length
+                                ? "w-12"
+                                : "w-18"
+                            )}
+                          >
+                            {index === specifications.length ? "Add" : "Remove"}
+                          </button>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
