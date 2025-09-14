@@ -1,5 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { type Product } from "../../components/hooks/useFetchProducts";
+interface Product {
+  id?: number;
+  name: string;
+  brand: string;
+  category: string;
+  subCategory: string;
+  price: number;
+  stock: number;
+  description: string;
+  imageUrl: string;
+  specifications?: Record<string, string | number | boolean>;
+  rating?: number;
+  reviews?: number;
+}
 
 interface CartItem {
   product: Product;

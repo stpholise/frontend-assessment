@@ -1,9 +1,24 @@
 import ProductCard from "../components/cards/ProductCard";
 import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom"; 
-import { type Product } from "../components/hooks/useFetchProducts";
+import { useNavigate } from "react-router-dom";  
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "../components/hooks/useDebouncer"; 
+
+export interface Product {
+  id: number;
+  name: string;
+  category: string;
+  subCategory: string;
+  price: number;
+  stock: number;
+  brand: string;
+  description: string;
+  imageUrl: string;
+  rating: number;
+  reviews: number;
+  specifications: Record<string, string | number | boolean>;
+}
+
 
 const fetchProducts = async ({
   page,
@@ -11,6 +26,8 @@ const fetchProducts = async ({
   search,
   minPrice,
   maxPrice,
+  sortBy,
+  order,
 }: {
   page: number;
   limit: number;
@@ -23,7 +40,7 @@ const fetchProducts = async ({
   const res = await fetch(
     `http://localhost:3000/api/products?page=${page}&limit=${limit}&search=${search}&minPrice=${minPrice}&maxPrice=${
       maxPrice ?? ""
-    }`,
+   }&sortBy=${sortBy}&order=${order}`,
     { method: "GET" }
   );
 
@@ -160,8 +177,7 @@ const Home = () => {
                   }
                   className="w-full outline-none test-sm capitalize"
                 >
-                  <option value="price">Price</option>
-                  <option value="date">Date</option>
+                  <option value="id">Id</option>
                   <option value="name">Name</option>
                 </select>
               </div>

@@ -1,9 +1,8 @@
 import { useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../store/slices/CartSlice";
-import { useNavigate } from "react-router-dom";
-import { useDeleteProduct } from "../components/hooks/useCreatProduct";
-import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom"; 
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 const fetchProduct = async ({ id }: { id: number }) => {
   const res = await fetch(`http://localhost:3000/api/products/${id}`, {
@@ -16,15 +15,35 @@ const fetchProduct = async ({ id }: { id: number }) => {
   return res.json();
 };
 
+const deleteAProduct = async ({ id }: { id: number }) => {
+  const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.message || "Failed to delete product");
+  }
+  if (response.status === 204) return true;
+};
+
 const ProductDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {
-    deleteProduct,
-    isLoading: isDeleting,
-    error: deleteError,
-  } = useDeleteProduct();
+
   const { id } = useParams<{ id: string }>();
+
+  const {
+    mutate: deleteProduct,
+    isPending: isDeleting,
+    error: deleteError,
+    reset,
+  } = useMutation({
+    mutationFn: ({ id }: { id: number }) => deleteAProduct({ id }),
+    onSuccess: () => {
+      reset();
+      navigate("/");
+    },
+  });
 
   const {
     data: product,
@@ -39,20 +58,14 @@ const ProductDetail = () => {
   if (error) return <p className="text-red-500">{error.message}</p>;
   if (!product) return <p>Product not found</p>;
   const handleAddToCart = () => {
-    dispatch(addToCart({ ...product }));
-    console.log("Added to cart", product);
+    dispatch(addToCart({ ...product })); 
   };
   const goToEdit = () => {
     navigate(`/products/edit/${product.id}`, { state: { product } });
   };
 
-  const deleteProductById = async (id: number) => {
-    try {
-      await deleteProduct(id);
-      navigate("/");
-    } catch (error) {
-      console.error("Error deleting product:", error);
-    }
+  const deleteProductById = (id: number) => {
+    deleteProduct({ id });
   };
 
   return (
@@ -118,25 +131,24 @@ const ProductDetail = () => {
             </div>
 
             <div className="py-4  border-gray-200 mt-auto flex gap-4 flex-wrap">
-             
-                <button
-                  onClick={handleAddToCart}
-                  className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1"
-                >
-                  Add to Cart
-                </button>  
-                <button
-                  onClick={goToEdit}
-                  className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1   "
-                >
-                  Edit Product
-                </button> 
-                <button
-                  onClick={() => deleteProductById(product.id)}
-                  className="bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1"
-                >
-                  Delete Product
-                </button> 
+              <button
+                onClick={handleAddToCart}
+                className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1"
+              >
+                Add to Cart
+              </button>
+              <button
+                onClick={goToEdit}
+                className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1   "
+              >
+                Edit Product
+              </button>
+              <button
+                onClick={() => deleteProductById(product.id)}
+                className="bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1"
+              >
+                Delete Product
+              </button>
             </div>
           </div>
         </div>

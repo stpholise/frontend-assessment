@@ -1,7 +1,23 @@
-import { type Product } from "../hooks/useFetchProducts";
+
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/CartSlice";
+
+export interface Product {
+  id: number;
+  name: string;
+  category: string;
+  subCategory: string;
+  price: number;
+  stock: number;
+  brand: string;
+  description: string;
+  imageUrl: string;
+  rating: number;
+  reviews: number;
+  specifications: Record<string, string | number | boolean>;
+}
+
 
 const ProductCard = ({ product }: { product: Product }) => {
   const { name, brand, rating, price, reviews, imageUrl, id } = product;

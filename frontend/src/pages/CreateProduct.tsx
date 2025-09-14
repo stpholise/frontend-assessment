@@ -3,10 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { useState } from "react";
 import clsx from "clsx";
-import {
-  useCreateProduct,
-  useUpdateProduct,
-} from "../components/hooks/useCreatProduct";
+import { useMutation } from "@tanstack/react-query";
 
 interface valuesType {
   id: number | undefined;
@@ -26,16 +23,59 @@ interface valuesType {
 interface CreateProductProps {
   product?: valuesType;
 }
+const createAProduct = async (product: valuesType) => {
+  const res = await fetch("http://localhost:3000/api/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(product),
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error?.message || "Failed to create product");
+  }
+
+  return res.json();
+};
+
+const updateAProduct = async (id: number, product: valuesType) => {
+  const url = `http://localhost:3000/api/products/${id}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(product),
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error?.message || "Failed to update product");
+  }
+
+  return res.json();
+};
 
 const CreateProduct = ({ product }: CreateProductProps) => {
   const isEdit = Boolean(product);
   const navigate = useNavigate();
-  const { createProduct, isLoading, error } = useCreateProduct();
   const {
-    updateProduct,
-    isLoading: isUpdating,
+    mutate: createProduct,
+    isPending: isLoading,
+    error,
+  } = useMutation({
+    mutationFn: (product: valuesType) => createAProduct(product),
+    onSuccess: () => navigate("/"),
+  });
+ 
+
+  const {
+    mutate: updateProduct,
+    isPending: isUpdating,
     error: updateError,
-  } = useUpdateProduct(); 
+  } = useMutation({
+    mutationFn: ({id, product}: {id: number; product: valuesType}) => updateAProduct(id, product),
+    onSuccess: () => navigate("/"),
+  });
+
   const [specifications, setSpecifications] = useState<
     Record<string, string | number | boolean>
   >(product?.specifications ?? { "": "" });
@@ -116,26 +156,24 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     if (isEdit && product?.id) {
       try {
         formik.setSubmitting(true);
-        await updateProduct(product?.id, { ...values, specifications });
+        await updateProduct({ id: product?.id, product: { ...values, specifications } });
         formik.resetForm();
         setSpecifications({});
       } catch (err) {
         console.error(err);
-      }
-      finally {
+      } finally {
         formik.setSubmitting(false);
       }
     } else {
       try {
         formik.setSubmitting(true);
-        await createProduct({ ...values, specifications }); // pass object directly
+        await createProduct({ ...values, specifications }); 
         formik.resetForm();
         setSpecifications({});
         navigate("/");
       } catch (err) {
         console.error(err);
-      }
-      finally {
+      } finally {
         formik.setSubmitting(false);
       }
     }
@@ -169,7 +207,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
             onClick={() => navigate("/")}
             className="text-black font-semibold flex gap-1.5 items-center"
           >
-            <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4"/> 
+            <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4" />
             Back to Products
           </button>
         </div>
@@ -393,7 +431,11 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                               onClick={() => removeSpecification(key)}
                               className="bg-red-600 text-white font-medium text-sm rounded-sm h-8 w-12 flex items-center justify-center"
                             >
-                              <img src="/close.svg" alt="close" className="size-5 object-cover " />
+                              <img
+                                src="/close.svg"
+                                alt="close"
+                                className="size-5 object-cover "
+                              />
                             </button>
                           )}
                         </div>

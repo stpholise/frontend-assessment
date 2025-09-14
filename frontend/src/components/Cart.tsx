@@ -6,7 +6,7 @@ import {
   reduceItem,
   removeFromCart,
 } from "../store/slices/CartSlice";
-import clsx from "clsx";
+import clsx from "clsx"; 
 
 const Cart = () => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
@@ -14,6 +14,15 @@ const Cart = () => {
 
   const dispatch = useDispatch();
 
+  const cartItemsCount = cartItems.reduce(
+    (acc, item) => acc + item.quantity, 0
+  )
+
+const subtotal = cartItems.reduce(
+  (acc, item) => acc + item.product.price * item.quantity,
+  0
+);
+  
   return (
     <>
       <div className="sm:w-80 w-full h-full min-h-screen bg-white fixed top-0 right-0 border-l border-gray-200 p-4 z-50">
@@ -28,9 +37,9 @@ const Cart = () => {
           {" "}
           {cartItems.length === 0
             ? "Your cart is currently empty."
-            : `You have ${cartItems.length} items in your cart.`}
+            : `You have ${cartItemsCount} items in your cart.`}
         </p>
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4 mt-2">
           {cartItems.map((item, index) => (
             <div key={index} className="flex items-center space-x-2">
               <img
@@ -71,6 +80,9 @@ const Cart = () => {
           ))}
         </div>
         <div className="mt-4">
+        <div className="flex justify-between items-center mb-4">
+          total: <span className="font-bold">${subtotal.toFixed(2)}</span>
+        </div>
           <button className="bg-slate-900 text-white font-medium text-sm px-4 py-2 w-full h-8 rounded flex items-center justify-center">
             Proceed to Checkout
           </button>

@@ -24,8 +24,10 @@ function App() {
           <div className="  h-full min-h-screen bg-[#f9f9f9] md:w-full lg:w-[calc(100%-25rem)] lg:ml-80">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/products/create" element={<CreateProduct />} />
+              <Route path="/products" element={<CreateProduct />} />
               <Route path="/products/edit/:id" element={<EditProduct />} />
+              
+
               <Route path="/product/:id" element={<ProductDetail />} />
             </Routes>
           </div>

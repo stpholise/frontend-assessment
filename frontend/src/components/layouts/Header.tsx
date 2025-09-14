@@ -9,6 +9,10 @@ const Header = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const menuState = useSelector((state: RootState) => state.app.menuState);
+  const cartItemsCount = cartItems.reduce(
+    (acc, item) => acc + item.quantity,
+    0
+  );
 
   return (
     <header>
@@ -17,17 +21,17 @@ const Header = () => {
           onClick={() => dispatch(setMenuState(!menuState))}
           className="lg:hidden"
         >
-          toggle
+          <img src="/menu.svg" alt="menu" className="size-6" />
         </button>
         <h1 className="text-black font-bold ">
           {" "}
           <Link to="/"> Test App</Link>
         </h1>
         <button className="relative block" onClick={() => dispatch(openCart())}>
-          cart{" "}
+          <img src="/cart.svg" alt="cart" className="size-6" />
           {cartItems.length > 0 && (
-            <p className="text-[10px] absolute -top-1 -right-1 text-white font-medium bg-slate-900 rounded-full size-3 h-3 w-3 flex items-center justify-center">
-              {cartItems.length}
+            <p data-testid="cart-badge" className="text-[10px] absolute -top-1 -right-1 text-white font-medium bg-slate-900 rounded-full size-3.5 h-3.5 w-3.5 flex items-center justify-center">
+              {cartItemsCount}
             </p>
           )}
         </button>
