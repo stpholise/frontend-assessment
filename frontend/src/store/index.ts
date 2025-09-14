@@ -1,9 +1,11 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import CartReducer from './slices/CartSlice'
+import AppReducer from './slices/AppSlice'
 
 
 const rootReducer = combineReducers({
-cart: CartReducer
+cart: CartReducer,
+app:AppReducer
 })
 
 export const store = configureStore({

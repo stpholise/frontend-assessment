@@ -157,7 +157,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
       {isUpdating && (
         <div className="text-gray-700 mb-2">Updating product...</div>
       )}
-      <h2 className="font-semibold text-2xl mb-4">
+      <h2 className="font-semibold text-2xl mb-4 px-4 md:px-6">
         {isEdit ? "Edit Product" : "Create New Product"}
       </h2>
       <div className=" w-full rounded-xl bg-white ">
@@ -167,9 +167,9 @@ const CreateProduct = ({ product }: CreateProductProps) => {
           </h3>
           <button
             onClick={() => navigate("/")}
-            className="text-black font-semibold"
+            className="text-black font-semibold flex gap-1.5 items-center"
           >
-            {" "}
+            <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4"/> 
             Back to Products
           </button>
         </div>
@@ -181,7 +181,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
           {({ isValid, isSubmitting }) => (
             <Form>
               <div className=" flex flex-col gap-4 px-6">
-                <div className=" grid grid-cols-2 gap-4">
+                <div className=" grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className=" flex flex-col gap-2">
                     <label htmlFor="name" className="font-medium text-sm ">
                       Product Name
@@ -327,7 +327,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                         <button
                           type="button"
                           onClick={addSpecification}
-                          className="bg-green-600 text-white font-medium text-sm rounded-sm h-8 w-12"
+                          className="bg-slate-800 text-white font-medium text-sm rounded-sm h-8 w-12"
                         >
                           Add Specifications
                         </button>
@@ -337,10 +337,10 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                       ([key, value], index) => (
                         <div
                           key={index}
-                          className="flex gap-2 w-full items-start my-1"
+                          className="flex gap-2 w-full sm:items-start items-end my-1"
                         >
-                          <div className="flex gap-2 w-11/12 ">
-                            <div className=" flex flex-col gap-2 w-1/2">
+                          <div className="flex gap-2 w-11/12 sm:flex-row flex-col  ">
+                            <div className=" flex flex-col gap-2 w-full sm:w-1/2">
                               <Field
                                 type="text"
                                 value={key}
@@ -359,7 +359,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                                 className="text-red-500 text-xs"
                               />
                             </div>
-                            <div className=" flex flex-col gap-2 w-1/2">
+                            <div className=" flex flex-col gap-2 w-full sm:w-1/2">
                               <Field
                                 type="text"
                                 value={value}
@@ -391,9 +391,9 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                             <button
                               type="button"
                               onClick={() => removeSpecification(key)}
-                              className="bg-red-600 text-white font-medium text-sm rounded-sm h-8 w-18"
+                              className="bg-red-600 text-white font-medium text-sm rounded-sm h-8 w-12 flex items-center justify-center"
                             >
-                              Remove
+                              <img src="/close.svg" alt="close" className="size-5 object-cover " />
                             </button>
                           )}
                         </div>

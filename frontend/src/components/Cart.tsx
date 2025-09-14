@@ -1,19 +1,27 @@
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../store";
-import { addToCart, closeCart, reduceItem , removeFromCart } from "../store/slices/CartSlice";
+import {
+  addToCart,
+  closeCart,
+  reduceItem,
+  removeFromCart,
+} from "../store/slices/CartSlice";
+import clsx from "clsx";
 
 const Cart = () => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  const isCartOpen = useSelector((state: RootState) => state.cart.isCartOpen);
+
   const dispatch = useDispatch();
 
   return (
     <>
-      <div className="w-80 h-full min-h-screen bg-white fixed top-0 right-0 border-l border-gray-200 p-4">
+      <div className="sm:w-80 w-full h-full min-h-screen bg-white fixed top-0 right-0 border-l border-gray-200 p-4 z-50">
         <button
           onClick={() => dispatch(closeCart())}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
         >
-          Close
+          <img src="/close.svg" alt="" className="size-4" />
         </button>
         <h2 className="font-bold text-lg mb-4">Shopping Cart</h2>
         <p className="text-xs text-gray-400">
@@ -35,26 +43,28 @@ const Cart = () => {
                 <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                 <p className="text-sm font-semibold">${item.product.price}</p>
               </div>
-              <div className="">
+              <div className="flex items-center">
                 <button
                   disabled={item.quantity === 1}
                   onClick={() => dispatch(reduceItem({ ...item.product }))}
-                  className="bg-slate-900 text-white text-xs font-medium px-2 py-1 rounded"
+                  className="bg-white text-black shadow size-4 text-xs font-medium px-2 py-1 rounded flex items-center justify-center"
                 >
-                 -
+                  -
                 </button>
-                <span className="text-xs text-gray-500">{item.quantity}</span>
+                <span className="text-xs text-gray-500 w-5 text-center">
+                  {item.quantity}
+                </span>
                 <button
                   onClick={() => dispatch(addToCart({ ...item.product }))}
-                  className="bg-slate-900 text-white text-xs font-medium px-2 py-1 rounded"
+                  className="bg-white text-black shadow size-4 text-xs font-medium px-2 py-1 rounded flex items-center justify-center"
                 >
-                 +
+                  +
                 </button>
                 <button
                   onClick={() => dispatch(removeFromCart({ ...item.product }))}
-                  className="bg-slate-900 text-white text-xs font-medium px-2 py-1 rounded"
+                  className="bg-white text-black text-xs font-medium px-2 py-1 rounded"
                 >
-                 x
+                  <img src="/close.svg" alt="" className="size-3" />
                 </button>
               </div>
             </div>
@@ -65,6 +75,18 @@ const Cart = () => {
             Proceed to Checkout
           </button>
         </div>
+      </div>
+      <div
+        className={clsx(
+          "lg-hidden fixed w-full h-full top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.1)] z-40",
+          {
+            hidden: !isCartOpen,
+            flex: isCartOpen,
+          }
+        )}
+        onClick={() => dispatch(closeCart())}
+      >
+        {" "}
       </div>
     </>
   );

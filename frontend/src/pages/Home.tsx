@@ -1,15 +1,47 @@
 import ProductCard from "../components/cards/ProductCard";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useFetchProducts } from "../components/hooks/useFetchProducts";
+import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom"; 
 import { type Product } from "../components/hooks/useFetchProducts";
+import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "../components/hooks/useDebouncer"; 
+
+const fetchProducts = async ({
+  page,
+  limit,
+  search,
+  minPrice,
+  maxPrice,
+}: {
+  page: number;
+  limit: number;
+  search: string;
+  minPrice: number;
+  maxPrice?: number;
+  sortBy: string;
+  order: string;
+}) => {
+  const res = await fetch(
+    `http://localhost:3000/api/products?page=${page}&limit=${limit}&search=${search}&minPrice=${minPrice}&maxPrice=${
+      maxPrice ?? ""
+    }`,
+    { method: "GET" }
+  );
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || "Failed to fetch products");
+  }
+
+  return res.json();
+};
 
 const Home = () => {
   const navigate = useNavigate();
-  const [pageNumber, setPageNumber] = useState<number>(1);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [searchValue, setSearchValue] = useState<string>("");
-
+  const debouncedSearch = useDebounce(searchValue, 2000);
   const [range, setRange] = useState<{
     start: number;
     end?: number | undefined;
@@ -17,21 +49,47 @@ const Home = () => {
     start: 0,
     end: undefined,
   });
-  const { productsData, isLoading, error } = useFetchProducts({
-    page: 1,
-    limit: Number(itemsPerPage),
-    search: searchValue,
-    minPrice: range.start,
-    maxPrice: range.end,
+
+  const [sortBy, setSortBy] = useState("price");
+  const [order, setOrder] = useState("asc");
+
+  const {
+    data: productsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["products", currentPage, itemsPerPage, searchValue, range, sortBy, order],
+    queryFn: () =>
+      fetchProducts({
+        page: currentPage,
+        limit: itemsPerPage,
+        search: debouncedSearch,
+        minPrice: range.start,
+        maxPrice: range.end,
+        sortBy,
+        order,
+      }),
   });
 
-  useEffect(() => {
-    console.log({ productsData, isLoading, error });
-  });
+  const totalProducts = productsData?.total || 0;
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+ 
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage); 
+    }
+  };
 
+    const handlePrevious = () => {
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      setCurrentPage(prevPage); 
+    }
+  };
   return (
     <>
-      <div className="flex justify-between px-6  mt-8 mb-2 items-center">
+      <div className="flex justify-between px-6  mt-8 mb-2 items-center ">
         <h2 className="font-semibold text-xl">All Products</h2>{" "}
         <button
           className="block bg-black text-white text-sm font-medium px-4 py-2 rounded-lg"
@@ -46,15 +104,16 @@ const Home = () => {
         <p className="text-red-500">Error: {error.message}</p>
       ) : (
         <>
-          <div className="functionality border-2 border-red-400 px-6 py-1 grid grid-cols-3 gap-4 text-sm">
+          <div className="functionality  px-6 py-1 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div className="">
               <p className="font-medium">Search</p>
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchValue}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setSearchValue(e.target.value)
-                }
+                }}
                 className="w-full bg-white rounded-sm px-3 py-1 text-sm outline-none"
                 placeholder="Search Products..."
               />
@@ -93,13 +152,17 @@ const Home = () => {
               <p className="font-medium">Sort By</p>
               <div className="w-full rounded-lg py-1 px-3 bg-white">
                 <select
-                  name=""
-                  id=""
+                  name="sortBy"
+                  id="sortBy"
+                  value={sortBy}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setSortBy(e.target.value)
+                  }
                   className="w-full outline-none test-sm capitalize"
                 >
-                  <option value="price">price</option>
-                  <option value="price">date</option>
-                  <option value="price">name</option>
+                  <option value="price">Price</option>
+                  <option value="date">Date</option>
+                  <option value="name">Name</option>
                 </select>
               </div>
             </div>
@@ -107,8 +170,12 @@ const Home = () => {
               <p className="font-medium">Order</p>
               <div className="w-full rounded-lg py-1 px-3 bg-white">
                 <select
-                  name=""
-                  id=""
+                  name="order"
+                  id="order"
+                  value={order}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setOrder(e.target.value)
+                  }
                   className="w-full outline-none test-sm capitalize"
                 >
                   <option value="asc">Ascending</option>
@@ -117,7 +184,7 @@ const Home = () => {
               </div>
             </div>
           </div>
-          <div className="mx-auto  w-full h-full px-6  mt-4 flex gap-4 lg:grid-cols-3 lg:grid flex-wrap">
+          <div className="mx-auto  w-full h-full px-6  mt-4 flex gap-4 md:grid-cols-3 sm:grid sm:grid-cols-2 flex-wrap">
             {productsData &&
               productsData.products.map((item: Product) => (
                 <ProductCard key={item.id} product={item} />
@@ -127,9 +194,9 @@ const Home = () => {
           <footer className="border-2 border-red-400 px-6 pt-4 pb-2 my-1 flex justify-between items-center">
             <div className="flex gap-4 items-center">
               <button
-                disabled={pageNumber === 1}
+                disabled={currentPage === 1}
                 className="bg-gray-400 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
-                onClick={() => setPageNumber((prev) => prev - 1)}
+                onClick={handlePrevious}
               >
                 Previous
               </button>
@@ -137,8 +204,9 @@ const Home = () => {
                 Page {productsData && productsData.currentPage}
               </p>
               <button
+                disabled={currentPage === totalPages}
                 className="bg-gray-400 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
-                onClick={() => setPageNumber((prev) => prev + 1)}
+                onClick={handleNext}
               >
                 Next
               </button>
