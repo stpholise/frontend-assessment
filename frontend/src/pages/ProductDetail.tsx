@@ -1,8 +1,12 @@
 import { useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { addToCart } from "../store/slices/CartSlice";
-import { useNavigate } from "react-router-dom"; 
+import { addToCart, removeFromCart } from "../store/slices/CartSlice";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import {  toast } from "react-toastify"; 
+import "react-toastify/dist/ReactToastify.css";
+
+const notify = (message: string) => toast(message);
 
 const fetchProduct = async ({ id }: { id: number }) => {
   const res = await fetch(`http://localhost:3000/api/products/${id}`, {
@@ -16,14 +20,26 @@ const fetchProduct = async ({ id }: { id: number }) => {
 };
 
 const deleteAProduct = async ({ id }: { id: number }) => {
-  const response = await fetch(`http://localhost:3000/api/products/${id}`, {
-    method: "DELETE",
-  });
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.message || "Failed to delete product");
+  notify("Deleting product...");
+  try {
+    const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "Failed to delete product");
+    }
+    if (response.status === 204) return true;
+
+    notify("Product deleted successfully");
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      notify(`Error: ${error.message}`);
+    } else {
+      notify("Error: Something went wrong");
+    }
+    throw error;
   }
-  if (response.status === 204) return true;
 };
 
 const ProductDetail = () => {
@@ -58,7 +74,7 @@ const ProductDetail = () => {
   if (error) return <p className="text-red-500">{error.message}</p>;
   if (!product) return <p>Product not found</p>;
   const handleAddToCart = () => {
-    dispatch(addToCart({ ...product })); 
+    dispatch(addToCart({ ...product }));
   };
   const goToEdit = () => {
     navigate(`/products/edit/${product.id}`, { state: { product } });
@@ -66,10 +82,11 @@ const ProductDetail = () => {
 
   const deleteProductById = (id: number) => {
     deleteProduct({ id });
+    dispatch(removeFromCart({ id }));
   };
 
   return (
-    <div className="w-full   rounded-lg px-4 py-4">
+    <div className="w-full   rounded-lg px-4 py-4"> 
       {isDeleting && <p className="text-blue-500">Deleting product...</p>}
       {deleteError && (
         <p className="text-red-500">Error: {deleteError.message}</p>

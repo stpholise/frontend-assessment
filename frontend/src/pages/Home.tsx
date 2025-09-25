@@ -1,8 +1,8 @@
 import ProductCard from "../components/cards/ProductCard";
 import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";  
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useDebounce } from "../components/hooks/useDebouncer"; 
+import { useDebounce } from "../components/hooks/useDebouncer";
 
 export interface Product {
   id: number;
@@ -18,7 +18,6 @@ export interface Product {
   reviews: number;
   specifications: Record<string, string | number | boolean>;
 }
-
 
 const fetchProducts = async ({
   page,
@@ -40,7 +39,7 @@ const fetchProducts = async ({
   const res = await fetch(
     `http://localhost:3000/api/products?page=${page}&limit=${limit}&search=${search}&minPrice=${minPrice}&maxPrice=${
       maxPrice ?? ""
-   }&sortBy=${sortBy}&order=${order}`,
+    }&sortBy=${sortBy}&order=${order}`,
     { method: "GET" }
   );
 
@@ -58,7 +57,7 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [searchValue, setSearchValue] = useState<string>("");
-  const debouncedSearch = useDebounce(searchValue, 2000);
+  const debouncedSearch = useDebounce(searchValue, 500);
   const [range, setRange] = useState<{
     start: number;
     end?: number | undefined;
@@ -75,7 +74,15 @@ const Home = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["products", currentPage, itemsPerPage, searchValue, range, sortBy, order],
+    queryKey: [
+      "products",
+      currentPage,
+      itemsPerPage,
+      debouncedSearch,
+      range,
+      sortBy,
+      order,
+    ],
     queryFn: () =>
       fetchProducts({
         page: currentPage,
@@ -90,18 +97,18 @@ const Home = () => {
 
   const totalProducts = productsData?.total || 0;
   const totalPages = Math.ceil(totalProducts / itemsPerPage);
- 
+
   const handleNext = () => {
     if (currentPage < totalPages) {
       const nextPage = currentPage + 1;
-      setCurrentPage(nextPage); 
+      setCurrentPage(nextPage);
     }
   };
 
-    const handlePrevious = () => {
+  const handlePrevious = () => {
     if (currentPage > 1) {
       const prevPage = currentPage - 1;
-      setCurrentPage(prevPage); 
+      setCurrentPage(prevPage);
     }
   };
   return (
@@ -115,11 +122,7 @@ const Home = () => {
           Add New Product
         </button>
       </div>
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <p className="text-red-500">Error: {error.message}</p>
-      ) : (
+      {
         <>
           <div className="functionality  px-6 py-1 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div className="">
@@ -129,7 +132,7 @@ const Home = () => {
                 type="text"
                 value={searchValue}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setSearchValue(e.target.value)
+                  setSearchValue(e.target.value.trim());
                 }}
                 className="w-full bg-white rounded-sm px-3 py-1 text-sm outline-none"
                 placeholder="Search Products..."
@@ -200,14 +203,37 @@ const Home = () => {
               </div>
             </div>
           </div>
-          <div className="mx-auto  w-full h-full px-6  mt-4 flex gap-4 md:grid-cols-3 sm:grid sm:grid-cols-2 flex-wrap">
-            {productsData &&
-              productsData.products.map((item: Product) => (
-                <ProductCard key={item.id} product={item} />
-              ))}
-          </div>
-
-          <footer className="border-2 border-red-400 px-6 pt-4 pb-2 my-1 flex justify-between items-center">
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center w-full h-full   ">
+              <img
+                src="box.svg"
+                alt="empty box"
+                width={250}
+                className="lg:size-56 size-32"
+              />
+              <p className="font-bold lg:text-3xl ">No products found</p>
+            </div>
+          ) : productsData.length > 0 ? (
+            <div className="mx-auto  w-full h-full px-6  mt-4 flex gap-4 md:grid-cols-3 sm:grid sm:grid-cols-2 flex-wrap">
+              {productsData &&
+                productsData.products.map((item: Product) => (
+                  <ProductCard key={item.id} product={item} />
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center w-full h-full   ">
+              <img
+                src="box.svg"
+                alt="empty box"
+                width={250}
+                className="lg:size-56 size-32"
+              />
+              <p className="font-bold lg:text-3xl ">No products found</p>
+            </div>
+          )}
+          <footer className=" px-6 pt-4 pb-2 my-1 flex justify-between items-center">
             <div className="flex gap-4 items-center">
               <button
                 disabled={currentPage === 1}
@@ -246,7 +272,7 @@ const Home = () => {
             </div>
           </footer>
         </>
-      )}
+      }
     </>
   );
 };
