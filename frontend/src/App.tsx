@@ -6,14 +6,14 @@ import Sidebar from "./components/layouts/Sidebar";
 import Header from "./components/layouts/Header";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./components/Cart";
-import { useSelector } from "react-redux";
-import type { RootState } from "./store";
+// import { useSelector } from "react-redux";
+// import type { RootState } from "./store";
 import EditProduct from "./pages/EditProduct";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
 function App() {
-  const isCartOpen = useSelector((state: RootState) => state.cart.isCartOpen);
+  // const isCartOpen = useSelector((state: RootState) => state.cart.isCartOpen);
 
   return (
     <>
@@ -22,14 +22,13 @@ function App() {
           <ToastContainer />
           <Header />
           <Sidebar />
-          {isCartOpen && <Cart />}
+          { <Cart />}
 
           <div className="  h-full min-h-screen bg-[#f9f9f9] md:w-full lg:w-[calc(100%-25rem)] lg:ml-80">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/products/create" element={<CreateProduct />} />
               <Route path="/products/edit/:id" element={<EditProduct />} />
-
               <Route path="/product/:id" element={<ProductDetail />} />
             </Routes>
           </div>

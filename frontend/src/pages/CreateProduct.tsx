@@ -65,14 +65,14 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     mutationFn: (product: valuesType) => createAProduct(product),
     onSuccess: () => navigate("/"),
   });
- 
 
   const {
     mutate: updateProduct,
     isPending: isUpdating,
     error: updateError,
   } = useMutation({
-    mutationFn: ({id, product}: {id: number; product: valuesType}) => updateAProduct(id, product),
+    mutationFn: ({ id, product }: { id: number; product: valuesType }) =>
+      updateAProduct(id, product),
     onSuccess: () => navigate("/"),
   });
 
@@ -156,7 +156,10 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     if (isEdit && product?.id) {
       try {
         formik.setSubmitting(true);
-        await updateProduct({ id: product?.id, product: { ...values, specifications } });
+        await updateProduct({
+          id: product?.id,
+          product: { ...values, specifications },
+        });
         formik.resetForm();
         setSpecifications({});
       } catch (err) {
@@ -167,7 +170,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     } else {
       try {
         formik.setSubmitting(true);
-        await createProduct({ ...values, specifications }); 
+        await createProduct({ ...values, specifications });
         formik.resetForm();
         setSpecifications({});
         navigate("/");
@@ -216,7 +219,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
           onSubmit={onSubmit}
           validationSchema={validationSchema}
         >
-          {({ isValid, isSubmitting }) => (
+          {({ isValid, setFieldValue, values, isSubmitting }) => (
             <Form>
               <div className=" flex flex-col gap-4 px-6">
                 <div className=" grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -292,9 +295,17 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                       Price
                     </label>
                     <Field
-                      type="number"
+                      type="text"
                       name="price"
                       placeholder="Price"
+                      value={values.price.toLocaleString("en-NG", {
+                        minimumFractionDigits: 0,
+                      })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const rawValue = e.target.value.replace(/\D/g, "");
+                        const numericValue = Number(rawValue);
+                        setFieldValue("price", numericValue);
+                      }}
                       className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
                     />
                     <ErrorMessage
@@ -310,6 +321,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                     <Field
                       type="number"
                       name="stock"
+                      min={1}
                       placeholder="Stock"
                       className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
                     />

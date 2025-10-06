@@ -3,6 +3,8 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "../components/hooks/useDebouncer";
+import Loading from "../components/Loading";
+import clsx from "clsx";
 
 export interface Product {
   id: number;
@@ -36,19 +38,27 @@ const fetchProducts = async ({
   sortBy: string;
   order: string;
 }) => {
-  const res = await fetch(
-    `http://localhost:3000/api/products?page=${page}&limit=${limit}&search=${search}&minPrice=${minPrice}&maxPrice=${
-      maxPrice ?? ""
-    }&sortBy=${sortBy}&order=${order}`,
-    { method: "GET" }
-  );
+  try {
+    const res = await fetch(
+      `http://localhost:3000/api/products?page=${page}&limit=${limit}&search=${search}&minPrice=${minPrice}&maxPrice=${
+        maxPrice ?? ""
+      }&sortBy=${sortBy}&order=${order}`,
+      { method: "GET" }
+    );
 
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.message || "Failed to fetch products");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || "Failed to fetch products");
+    }
+
+    return res.json();
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      throw new Error("An Error occured");
+    } else {
+      throw new Error("A new Error occured ");
+    }
   }
-
-  return res.json();
 };
 
 const Home = () => {
@@ -85,7 +95,7 @@ const Home = () => {
     ],
     queryFn: () =>
       fetchProducts({
-        page: currentPage,
+        page: Number(currentPage),
         limit: itemsPerPage,
         search: debouncedSearch,
         minPrice: range.start,
@@ -95,8 +105,9 @@ const Home = () => {
       }),
   });
 
-  const totalProducts = productsData?.total || 0;
-  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+  const totalProducts = productsData?.totalProducts || 0;
+  const totalPages =
+    totalProducts > 0 ? Math.ceil(totalProducts / itemsPerPage) : 1;
 
   const handleNext = () => {
     if (currentPage < totalPages) {
@@ -198,24 +209,28 @@ const Home = () => {
                   className="w-full outline-none test-sm capitalize"
                 >
                   <option value="asc">Ascending</option>
-                  <option value="dsc">Descending</option>
+                  <option value="desc">Descending</option>
                 </select>
               </div>
             </div>
           </div>
           {isLoading ? (
-            <p>Loading...</p>
+            <div className="my-12">
+              <Loading />
+            </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center w-full h-full   ">
               <img
-                src="box.svg"
-                alt="empty box"
+                src="/cirlcle-error.svg"
+                alt="error icon"
                 width={250}
-                className="lg:size-56 size-32"
+                className="lg:size-32 size-12"
               />
-              <p className="font-bold lg:text-3xl ">No products found</p>
+              <p className="font-bold lg:text-xl  text-red-600">
+                Error Loading products
+              </p>
             </div>
-          ) : productsData.length > 0 ? (
+          ) : productsData && productsData.products.length > 0 ? (
             <div className="mx-auto  w-full h-full px-6  mt-4 flex gap-4 md:grid-cols-3 sm:grid sm:grid-cols-2 flex-wrap">
               {productsData &&
                 productsData.products.map((item: Product) => (
@@ -223,21 +238,23 @@ const Home = () => {
                 ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full   ">
+            <div className="flex flex-col items-center justify-center w-full h-full my-12  ">
               <img
                 src="box.svg"
                 alt="empty box"
                 width={250}
-                className="lg:size-56 size-32"
+                className="lg:size-32 size-12"
               />
-              <p className="font-bold lg:text-3xl ">No products found</p>
+              <p className="font-semibold lg:text-xl text-slate-800 ">
+                No products found
+              </p>
             </div>
           )}
           <footer className=" px-6 pt-4 pb-2 my-1 flex justify-between items-center">
             <div className="flex gap-4 items-center">
               <button
                 disabled={currentPage === 1}
-                className="bg-gray-400 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
+                className="disabled:bg-gray-400  bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
                 onClick={handlePrevious}
               >
                 Previous
@@ -247,7 +264,9 @@ const Home = () => {
               </p>
               <button
                 disabled={currentPage === totalPages}
-                className="bg-gray-400 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
+                className={clsx(
+                  "disabled:bg-gray-400 bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer "
+                )}
                 onClick={handleNext}
               >
                 Next
@@ -264,7 +283,7 @@ const Home = () => {
                     setItemsPerPage(Number(e.target.value));
                   }}
                 >
-                  <option value="2">2 per page</option>
+                  <option value="3">3 per page</option>
                   <option value="5">5 per page</option>
                   <option value="10">10 per page</option>
                 </select>

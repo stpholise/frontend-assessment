@@ -3,10 +3,23 @@ import { useDispatch } from "react-redux";
 import { addToCart, removeFromCart } from "../store/slices/CartSlice";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {  toast } from "react-toastify"; 
+import { toast, Bounce, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const notify = (message: string) => toast(message);
+const isMobile = window.innerWidth < 768;
+const notify = (message: string) => {
+  toast.success(message, {
+    position: isMobile ? "top-center" : "top-right",
+    autoClose: 500,
+    hideProgressBar: true,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+    transition: isMobile ? Bounce : Slide,
+  });
+};
 
 const fetchProduct = async ({ id }: { id: number }) => {
   const res = await fetch(`http://localhost:3000/api/products/${id}`, {
@@ -34,7 +47,17 @@ const deleteAProduct = async ({ id }: { id: number }) => {
     notify("Product deleted successfully");
   } catch (error: unknown) {
     if (error instanceof Error) {
-      notify(`Error: ${error.message}`);
+      toast.error(error.message, {
+        position: isMobile ? "top-center" : "top-right",
+        autoClose: 500,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: isMobile ? Bounce : Slide,
+      });
     } else {
       notify("Error: Something went wrong");
     }
@@ -57,6 +80,7 @@ const ProductDetail = () => {
     mutationFn: ({ id }: { id: number }) => deleteAProduct({ id }),
     onSuccess: () => {
       reset();
+      notify("Product deleted successfully");
       navigate("/");
     },
   });
@@ -75,6 +99,7 @@ const ProductDetail = () => {
   if (!product) return <p>Product not found</p>;
   const handleAddToCart = () => {
     dispatch(addToCart({ ...product }));
+    notify("Item added to cart");
   };
   const goToEdit = () => {
     navigate(`/products/edit/${product.id}`, { state: { product } });
@@ -86,7 +111,7 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="w-full   rounded-lg px-4 py-4"> 
+    <div className="w-full   rounded-lg px-4 py-4">
       {isDeleting && <p className="text-blue-500">Deleting product...</p>}
       {deleteError && (
         <p className="text-red-500">Error: {deleteError.message}</p>
