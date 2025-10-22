@@ -231,7 +231,7 @@ const Home = () => {
               </p>
             </div>
           ) : productsData && productsData.products.length > 0 ? (
-            <div className="mx-auto  w-full h-full px-6  mt-4 flex gap-4 md:grid-cols-3 sm:grid sm:grid-cols-2 flex-wrap">
+            <div className="mx-auto  w-full h-full px-6  mt-4  grid grid-cols-2 py-3  gap-4 md:grid-cols-3  sm:grid sm:grid-cols-2 flex-wrap">
               {productsData &&
                 productsData.products.map((item: Product) => (
                   <ProductCard key={item.id} product={item} />

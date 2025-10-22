@@ -111,14 +111,17 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="w-full   rounded-lg px-4 py-4">
+    <div className="w-full    rounded-lg sm:px-4 sm:py-4 pb-10">
       {isDeleting && <p className="text-blue-500">Deleting product...</p>}
       {deleteError && (
         <p className="text-red-500">Error: {deleteError.message}</p>
       )}
-      <h2 className="text-xl font-medium my-2">Product Detail</h2>
-      <div className="rounded-lg border border-gray-200 shadow overflow-hidden">
-        <div className="bg-white w-full h-12 py-3 px-4 border border-gray-100 rounded-t-lg">
+      <h2 className="text-xl font-medium my-2 hidden sm:flex">
+        Product Detail
+      </h2>
+
+      <div className="rounded-lg sm:border sm:border-gray-200 sm:shadow overflow-hidden">
+        <div className="bg-white  w-full h-12 py-3 px-4 border   sm:mb-0 border-gray-100  rounded-lg sm:rounded-none sm:rounded-t-lg ">
           <button
             onClick={() => navigate("/")}
             className="text-black text-sm font-medium flex gap-1 items-center"
@@ -127,12 +130,12 @@ const ProductDetail = () => {
             Back to Products
           </button>
         </div>
-        <div className="w-full flex sm:flex-row flex-col gap-0 bg-white">
+        <div className="w-full border border-gray-200 sm:border-0 shadow  sm:shadow-none flex sm:flex-row flex-col gap-0 bg-white">
           <div className="">
             <img
               src={product.imageUrl}
               alt={product.name}
-              className="sm:w-70 w-full min-h-80 h-full object-cover"
+              className="sm:w-70 w-full min-h-80 h-full object-cover rounded-t-xs "
             />
           </div>
           <div className="flex flex-col px-4 py-4">
@@ -172,24 +175,41 @@ const ProductDetail = () => {
                 ))}
             </div>
 
-            <div className="py-4  border-gray-200 mt-auto flex gap-4 flex-wrap">
+            <div className="sm:py-4 py-2  border-gray-200 mt-auto flex justify-between sm:justify-start gap-4 flex-nowrap fixed sm:static bottom-0 left-0 right-0 bg-white px-3 sm:px-0">
+              <button
+                onClick={goToEdit}
+                className="sm:bg-black text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1  flex items-center justify-center  "
+              >
+                <img
+                  src="/edit-button-svgrepo-com.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="sm:hidden"
+                />
+                <span className="hidden sm:flex">
+
+                Edit Product
+                </span>
+              </button>
               <button
                 onClick={handleAddToCart}
-                className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1"
+                className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg flex-3 sm:flex-1"
               >
                 Add to Cart
               </button>
               <button
-                onClick={goToEdit}
-                className="bg-black text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1   "
-              >
-                Edit Product
-              </button>
-              <button
                 onClick={() => deleteProductById(product.id)}
-                className="bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-lg sm:flex-1"
+                className="sm:bg-red-500  text-white text-xs font-medium px-4 py-2  rounded-lg sm:flex-1 flex items-center  "
               >
-                Delete Product
+                <img
+                  src="/trashcan-svgrepo-com.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="sm:hidden"
+                />
+                <span className="hidden sm:flex">Delete Product</span>
               </button>
             </div>
           </div>

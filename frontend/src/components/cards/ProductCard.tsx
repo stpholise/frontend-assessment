@@ -48,7 +48,7 @@ const ProductCard = ({ product }: { product: Product }) => {
   };
 
   return (
-    <div className="md:max-w-80 w-full flex-strech rounded-lg min-h-80 h-80 overflow-hidden border shadow-sm border-gray-200">
+    <div className="md:max-w-80 w-full flex-strech rounded-sm sm:rounded-lg min-h-80 h-80 overflow-hidden sm:border shadow-sm border-gray-200">
       <div
         onClick={handleNavigate}
         className="cursor-pointer bg-gray-100 h-1/2 overflow-hidden max-h-1/2 "
@@ -56,10 +56,10 @@ const ProductCard = ({ product }: { product: Product }) => {
         <img
           src={imageUrl}
           alt="product image"
-          className="w-full h-full min-w-full min-h-full object-cover"
+          className="w-full h-full min-w-full min-h-full object-cover rounded-sm"
         />
       </div>
-      <div className="px-4 py-4 bg-white h-1/2  flex flex-col ">
+      <div className=" px-2 sm:px-4 py-2.5 sm:py-4 bg-white sm:h-1/2  flex flex-col ">
         <div
           className="cursor-pointer  flex flex-col "
           onClick={handleNavigate}
@@ -74,7 +74,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         </div>
         <button
           onClick={handleAddToCart}
-          className="cart bg-slate-900 rounded-sm text-white text-sm font-medium text-center w-full mt-auto  cursor-pointer  h-6   flex itemsc-center justify-center"
+          className="cart bg-slate-900 rounded-sm text-white text-sm font-medium text-center w-full mt-4 sm:mt-auto  cursor-pointer  h-6   flex itemsc-center justify-center"
         >
           Add to Cart
         </button>

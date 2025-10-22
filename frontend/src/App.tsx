@@ -5,15 +5,12 @@ import CreateProduct from "./pages/CreateProduct";
 import Sidebar from "./components/layouts/Sidebar";
 import Header from "./components/layouts/Header";
 import ProductDetail from "./pages/ProductDetail";
-import Cart from "./components/Cart";
-// import { useSelector } from "react-redux";
-// import type { RootState } from "./store";
+import Cart from "./components/Cart"; 
 import EditProduct from "./pages/EditProduct";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
-function App() {
-  // const isCartOpen = useSelector((state: RootState) => state.cart.isCartOpen);
+function App() { 
 
   return (
     <>
