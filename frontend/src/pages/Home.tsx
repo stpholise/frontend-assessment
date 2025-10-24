@@ -67,6 +67,7 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [searchValue, setSearchValue] = useState<string>("");
+  const [displayFilter, setDisplayFilter] = useState<boolean>(false);
   const debouncedSearch = useDebounce(searchValue, 500);
   const [range, setRange] = useState<{
     start: number;
@@ -109,6 +110,10 @@ const Home = () => {
   const totalPages =
     totalProducts > 0 ? Math.ceil(totalProducts / itemsPerPage) : 1;
 
+  const toggleFilterDisplay = () => {
+    setDisplayFilter((prev) => !prev);
+  };
+
   const handleNext = () => {
     if (currentPage < totalPages) {
       const nextPage = currentPage + 1;
@@ -135,7 +140,27 @@ const Home = () => {
       </div>
       {
         <>
-          <div className="functionality  px-6 py-1 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+          <div className="sm:hidden flex justify-end px-6">
+            <button className="" onClick={toggleFilterDisplay}>
+              <img
+                src="/filter-2-svgrepo-com.svg"
+                alt="filter"
+                width="24"
+                height={24}
+              />
+            </button>
+          </div>
+          <div
+            className={clsx(
+              "functionality   sm:static w-full transform transition-opacity duration-700 ease-in-out px-6 py-1 sm:grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm",
+              {
+                " -translate-y-100 opacity-0  pointer-events-none  max-h-0":
+                  !displayFilter,
+                " translate-y-0 opacity-100 pointer-events-auto delay:100":
+                  displayFilter,
+              }
+            )}
+          >
             <div className="">
               <p className="font-medium">Search</p>
               <input
@@ -251,13 +276,19 @@ const Home = () => {
             </div>
           )}
           <footer className=" px-6 pt-4 pb-2 my-1 flex justify-between items-center">
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center  w-full justify-between sm:justify-start">
               <button
                 disabled={currentPage === 1}
-                className="disabled:bg-gray-400  bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
+                className="disabled:hidden sm:disabled:block  bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
                 onClick={handlePrevious}
               >
-                Previous
+                <img
+                  src="/arrow-left-svgrepo-com.svg"
+                  alt="back"
+                  className="size-4 sm:hidden"
+                />
+
+                <span className="hidden sm:block">Previous</span>
               </button>
               <p className="text-sm font-medium">
                 Page {productsData && productsData.currentPage}
@@ -265,14 +296,19 @@ const Home = () => {
               <button
                 disabled={currentPage === totalPages}
                 className={clsx(
-                  "disabled:bg-gray-400 bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer "
+                  "disabled:hidden sm:disabled:block bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer "
                 )}
                 onClick={handleNext}
               >
-                Next
+                <img
+                  src="/arrow-right-svgrepo-com.svg"
+                  alt="back"
+                  className="size-4 sm:hidden"
+                />
+                <span className="hidden sm:block">Next</span>
               </button>
             </div>
-            <div className="relative w-44">
+            <div className="relative w-44 hidden sm:block">
               <div className="bg-white rounded-lg  px-3 py-1">
                 <select
                   name="itemsPerPage"

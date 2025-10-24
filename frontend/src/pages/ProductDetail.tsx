@@ -27,6 +27,7 @@ const fetchProduct = async ({ id }: { id: number }) => {
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
+    
     throw new Error(errData.message || "Failed to fetch product");
   }
   return res.json();
@@ -135,7 +136,7 @@ const ProductDetail = () => {
             <img
               src={product.imageUrl}
               alt={product.name}
-              className="sm:w-70 w-full min-h-80 h-full object-cover rounded-t-xs "
+              className="sm:w-70 w-full min-h-80 h-full object-cover rounded-t-xs mb-4 sm:mb-0 "
             />
           </div>
           <div className="flex flex-col px-4 py-4">

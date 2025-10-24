@@ -203,9 +203,9 @@ const CreateProduct = ({ product }: CreateProductProps) => {
       </h2>
       <div className=" w-full rounded-xl bg-white ">
         <div className=" px-4 py-4 flex justify-between">
-          <h3 className="font-medium text-xl">
+          {/* <h3 className="font-medium text-xl">
             {isEdit ? "Edit Product" : "Create New Product"}
-          </h3>
+          </h3> */}
           <button
             onClick={() => navigate("/")}
             className="text-black font-semibold flex gap-1.5 items-center"
