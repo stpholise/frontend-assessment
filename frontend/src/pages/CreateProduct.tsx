@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { useState } from "react";
 import clsx from "clsx";
 import { useMutation } from "@tanstack/react-query";
+import ImageUpload from "../components/ImageUpload";
 
 interface valuesType {
   id: number | undefined;
@@ -79,6 +80,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
   const [specifications, setSpecifications] = useState<
     Record<string, string | number | boolean>
   >(product?.specifications ?? { "": "" });
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   const initialValues: valuesType = {
     id: product?.id,
@@ -106,7 +108,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
       .min(1, "Price must be greater than 0")
       .required("Price is required and must be a positive number"),
     stock: Yup.number()
-      .min(0, "Stock cannot be negative")
+      .min(1, "Stock cannot be negative or zero")
       .required("Stock is required and must be a non-negative integer"),
     description: Yup.string().required(
       "Description is required and must be a string"
@@ -198,28 +200,36 @@ const CreateProduct = ({ product }: CreateProductProps) => {
       {isUpdating && (
         <div className="text-gray-700 mb-2">Updating product...</div>
       )}
-      <h2 className="font-semibold text-2xl mb-4 px-4 md:px-6">
+      <div className="bg-white sm:hidden  w-full px-4 py-2">
+        <button
+          onClick={() => navigate("/")}
+          className="text-black font-semibold flex gap-1.5 items-center"
+        >
+          <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4" />
+          Back to Products
+        </button>
+      </div>
+      <h2 className="font-semibold text-xl sm:text-2xl mt-2 mb-4 px-4 md:px-6">
         {isEdit ? "Edit Product" : "Create New Product"}
       </h2>
-      <div className=" w-full rounded-xl bg-white ">
-        <div className=" px-4 py-4 flex justify-between">
-          {/* <h3 className="font-medium text-xl">
-            {isEdit ? "Edit Product" : "Create New Product"}
-          </h3> */}
-          <button
-            onClick={() => navigate("/")}
-            className="text-black font-semibold flex gap-1.5 items-center"
-          >
-            <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4" />
-            Back to Products
-          </button>
+      <div className=" w-full rounded-xl bg-white   ">
+        <div className=" px-4 py-4  justify-between hidden sm:flex">
+           <button
+          onClick={() => navigate("/")}
+          className="text-black font-semibold flex gap-1.5 items-center"
+        >
+          <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4" />
+          Back to Products
+        </button>
         </div>
         <Formik
           initialValues={initialValues}
           onSubmit={onSubmit}
+          validateOnChange:true
+          validateOnMount
           validationSchema={validationSchema}
         >
-          {({ isValid, setFieldValue, values, isSubmitting }) => (
+          {({ isValid, setFieldValue, values, isSubmitting, setTouched, setFieldError, setFieldTouched }) => (
             <Form>
               <div className=" flex flex-col gap-4 px-6">
                 <div className=" grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -321,7 +331,6 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                     <Field
                       type="number"
                       name="stock"
-                      min={1}
                       placeholder="Stock"
                       className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
                     />
@@ -348,15 +357,13 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                     className="text-red-500 text-xs"
                   />
                 </div>
-                <div className=" flex flex-col gap-2">
-                  <label htmlFor="imageUrl" className="font-medium text-sm ">
-                    Image URL
-                  </label>
-                  <Field
-                    type="text"
-                    name="imageUrl"
-                    placeholder="Image URL"
-                    className="text-sm w-full px-4 py-1 rounded-sm border-gray-200 border outline-none"
+                <div className="">
+                  <ImageUpload
+                    imageUrl={imageUrl}
+                    setImageUrl={setImageUrl}
+                    setFieldValue={setFieldValue}
+                    setFieldError={setFieldError}
+                    setFieldTouched={setFieldTouched}
                   />
                   <ErrorMessage
                     name="imageUrl"
@@ -364,6 +371,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                     className="text-red-500 text-xs"
                   />
                 </div>
+
                 <div className=" w-full ">
                   <div className="w-full   ">
                     <div className=" flex justify-between items-center">
@@ -458,14 +466,25 @@ const CreateProduct = ({ product }: CreateProductProps) => {
 
                 <footer className="flex justify-between mb-4">
                   <button
-                    disabled={isSubmitting || !isValid || isLoading}
+                    disabled={isSubmitting}
                     type="submit"
+                    onClick={() => {
+                      setTouched({
+                        name: true,
+                        brand: true,
+                        category: true,
+                        subCategory: true,
+                        price: true,
+                        stock: true,
+                        description: true,
+                        imageUrl: true,
+                      });
+                    }}
                     className={clsx(
-                      " text-white font-medium  text-sm flex items-center justify-center  rounded-sm h-8 w-fit px-3",
-                      {
-                        "bg-gray-400": isSubmitting || !isValid || isLoading,
-                        "bg-slate-900": !isSubmitting || isValid || !isLoading,
-                      }
+                      "  font-medium  text-sm flex items-center justify-center  rounded-sm h-8 w-fit px-3",
+                      isValid || isSubmitting
+                        ? "bg-slate-900 border-slate-700 text-white"
+                        : "bg-gray-300 border-gray-400"
                     )}
                   >
                     {isEdit ? "Update Product" : "Create Product"}

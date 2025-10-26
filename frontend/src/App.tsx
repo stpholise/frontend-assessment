@@ -9,9 +9,14 @@ import Cart from "./components/Cart";
 import EditProduct from "./pages/EditProduct";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+// import {Cloudinary} from "@cloudinary/url-gen";
 
 function App() { 
-
+//  const cld = new Cloudinary({
+//     cloud: {
+//       cloudName: 'dmuhmpdkm'
+//     }
+//   });
   return (
     <>
       <Router>
@@ -24,7 +29,7 @@ function App() {
           <div className="  h-full min-h-screen bg-[#f9f9f9] md:w-full lg:w-[calc(100%-25rem)] lg:ml-80">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/products/create" element={<CreateProduct />} />
+              <Route path="/products/create" element={<CreateProduct/>} />
               <Route path="/products/edit/:id" element={<EditProduct />} />
               <Route path="/product/:id" element={<ProductDetail />} />
             </Routes>

@@ -152,12 +152,11 @@ const Home = () => {
           </div>
           <div
             className={clsx(
-              "functionality   sm:static w-full transform transition-opacity duration-700 ease-in-out px-6 py-1 sm:grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm",
+              " w-full transform transition-opacity duration-700 ease-in-out px-6 py-1 sm:grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm",
               {
-                " -translate-y-100 opacity-0  pointer-events-none  max-h-0":
+                " -translate-y-100 opacity-0    max-h-0 sm:max-h-fit sm:translate-y-0 sm:opacity-100 ":
                   !displayFilter,
-                " translate-y-0 opacity-100 pointer-events-auto delay:100":
-                  displayFilter,
+                " translate-y-0 opacity-100   delay:100": displayFilter,
               }
             )}
           >
@@ -279,7 +278,7 @@ const Home = () => {
             <div className="flex gap-4 items-center  w-full justify-between sm:justify-start">
               <button
                 disabled={currentPage === 1}
-                className="disabled:hidden sm:disabled:block  bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
+                className="disabled:hidden sm:disabled:block  sm:disabled:bg-gray-400 bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer"
                 onClick={handlePrevious}
               >
                 <img
@@ -296,7 +295,7 @@ const Home = () => {
               <button
                 disabled={currentPage === totalPages}
                 className={clsx(
-                  "disabled:hidden sm:disabled:block bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer "
+                  "disabled:hidden sm:disabled:block sm:disabled:bg-gray-400 bg-slate-800 px-5 py-2 rounded-sm text-sm font-medium text-white cursor-pointer "
                 )}
                 onClick={handleNext}
               >
