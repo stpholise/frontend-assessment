@@ -56,6 +56,18 @@ const updateAProduct = async (id: number, product: valuesType) => {
 };
 
 const CreateProduct = ({ product }: CreateProductProps) => {
+  const initialValues: valuesType = {
+    id: product?.id,
+    name: product?.name || "",
+    brand: product?.brand || "",
+    category: product?.category || "",
+    subCategory: product?.subCategory || "",
+    price: product?.price || 0,
+    stock: product?.stock || 0,
+    description: product?.description || "",
+    imageUrl: product?.imageUrl ?? "",
+    specifications: {},
+  };
   const isEdit = Boolean(product);
   const navigate = useNavigate();
   const {
@@ -81,19 +93,49 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     Record<string, string | number | boolean>
   >(product?.specifications ?? { "": "" });
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File>();
 
-  const initialValues: valuesType = {
-    id: product?.id,
-    name: product?.name || "",
-    brand: product?.brand || "",
-    category: product?.category || "",
-    subCategory: product?.subCategory || "",
-    price: product?.price || 0,
-    stock: product?.stock || 0,
-    description: product?.description || "",
-    imageUrl: product?.imageUrl || "",
-    specifications: {},
+  const uploadToCloudinary = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "y6acfyrq");
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/dmuhmpdkm/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      if (!response.ok) throw new Error("Upload failed");
+      const data = await response.json();
+      return data.secure_url as string;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        if ("code" in err && err.code === "ERR_NETWORK") {
+          throw new Error(
+            "Network error: please check your internet connection"
+          );
+        }
+        if (err.message === "Network Error") {
+          throw new Error(
+            "Network error: please check your internet connection"
+          );
+        }
+        throw new Error(err.message || "An unexpected error occurred");
+      }
+    }
   };
+
+  const {
+    mutateAsync: uploadImage,
+    isPending: loading,
+    error: uploadError,
+  } = useMutation({
+    mutationFn: (file: File) => uploadToCloudinary(file),
+    onError: (error) => console.log(error),
+  });
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required and must be a string"),
@@ -113,7 +155,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     description: Yup.string().required(
       "Description is required and must be a string"
     ),
-    imageUrl: Yup.string().url("Must be a valid URL").required("Required"),
+    imageUrl: Yup.mixed().required("Required"),
   });
 
   const updateSpecificationKey = (oldKey: string, newKey: string) => {
@@ -158,9 +200,16 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     if (isEdit && product?.id) {
       try {
         formik.setSubmitting(true);
+        let uploadedImageUrl = values.imageUrl as string;
+
+        if (imageFile) {
+          const uploadResult = await uploadImage(imageFile);
+          uploadedImageUrl = uploadResult ?? values.imageUrl;
+          setImageUrl(uploadedImageUrl);
+        }
         await updateProduct({
           id: product?.id,
-          product: { ...values, specifications },
+          product: { ...values, imageUrl: imageUrl, specifications },
         });
         formik.resetForm();
         setSpecifications({});
@@ -172,7 +221,17 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     } else {
       try {
         formik.setSubmitting(true);
-        await createProduct({ ...values, specifications });
+        let uploadedImageUrl = values.imageUrl as string;
+        if (imageFile) {
+          const uploadResult = await uploadImage(imageFile);
+          uploadedImageUrl = uploadResult ?? values.imageUrl;
+          setImageUrl(uploadedImageUrl);
+        }
+        await createProduct({
+          ...values,
+          imageUrl: uploadedImageUrl,
+          specifications,
+        });
         formik.resetForm();
         setSpecifications({});
         navigate("/");
@@ -214,22 +273,30 @@ const CreateProduct = ({ product }: CreateProductProps) => {
       </h2>
       <div className=" w-full rounded-xl bg-white   ">
         <div className=" px-4 py-4  justify-between hidden sm:flex">
-           <button
-          onClick={() => navigate("/")}
-          className="text-black font-semibold flex gap-1.5 items-center"
-        >
-          <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4" />
-          Back to Products
-        </button>
+          <button
+            onClick={() => navigate("/")}
+            className="text-black font-semibold flex gap-1.5 items-center"
+          >
+            <img src="/arrow_back.png" alt="back" className=" size-4 max-w-4" />
+            Back to Products
+          </button>
         </div>
         <Formik
           initialValues={initialValues}
           onSubmit={onSubmit}
-          validateOnChange:true
+          validateOnChange
           validateOnMount
           validationSchema={validationSchema}
         >
-          {({ isValid, setFieldValue, values, isSubmitting, setTouched, setFieldError, setFieldTouched }) => (
+          {({
+            isValid,
+            setFieldValue,
+            values,
+            isSubmitting,
+            setTouched,
+            setFieldError,
+            setFieldTouched,
+          }) => (
             <Form>
               <div className=" flex flex-col gap-4 px-6">
                 <div className=" grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -359,11 +426,13 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                 </div>
                 <div className="">
                   <ImageUpload
-                    imageUrl={imageUrl}
                     setImageUrl={setImageUrl}
                     setFieldValue={setFieldValue}
                     setFieldError={setFieldError}
                     setFieldTouched={setFieldTouched}
+                    setImageFile={setImageFile}
+                    loading={loading}
+                    error={uploadError}
                   />
                   <ErrorMessage
                     name="imageUrl"

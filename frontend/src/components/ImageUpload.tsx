@@ -1,70 +1,47 @@
 import React, { useCallback, type SetStateAction, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import clsx from "clsx";
+// import { useMutation } from "@tanstack/react-query";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const ImageUpload = ({
-  imageUrl,
-  setImageUrl,
+  loading,
+  error,
+  setImageFile,
   setFieldValue,
   setFieldError,
   setFieldTouched,
 }: {
-  imageUrl: string;
+  loading: boolean;
+  error: Error | null;
+  setImageFile: React.Dispatch<SetStateAction<File | undefined>>;
   setImageUrl: React.Dispatch<SetStateAction<string>>;
-  setFieldValue: (
+  setFieldValue: (field: string, value: File, shouldValidate?: boolean) => void;
+  setFieldError: (field: string, error: string) => void;
+  setFieldTouched: (
     field: string,
-    value: string,
+    touched?: boolean,
     shouldValidate?: boolean
   ) => void;
-  setFieldError: (field: string, error: string) => void;
-  setFieldTouched: (field:string,  touched?: boolean, shouldValidate?: boolean ) => void
 }) => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>("");
+  const [preview, setPreviewUrl] = useState<string>("");
+
   const handleDrop = useCallback(
-    async (acceptedFiles: File[]) => {
-      if (!acceptedFiles || acceptedFiles.length === 0) return;
-
+    (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
+      if (!file) return;
 
-      setLoading(true);
-      setError(null);
+      const blobUrl = URL.createObjectURL(file);
+      setPreviewUrl(blobUrl);
+
       setFieldError("imageUrl", "");
+      setFieldValue("imageUrl", file);
+      setImageFile(file);
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "y6acfyrq");
-
-      try {
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/dmuhmpdkm/image/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-        const data = await response.json();
-        setLoading(false);
-
-        if (data.secure_url) {
-          setImageUrl(data.secure_url);
-          setFieldValue("imageUrl", data.secure_url);
-        } else {
-          setError("image not found");
-        }
-      } catch (err) {
-        if (err instanceof Error) {
-          setLoading(false);
-          setError("sorry try again somethin went wrong");
-          setFieldError("imageUrl", "Upload failed. Try again.");
-        }
-      } finally {
-        setLoading(false);
-      }
+      return () => URL.revokeObjectURL(blobUrl);
     },
-    [setImageUrl, setFieldError, setFieldValue]
+    [setPreviewUrl, setFieldError, setFieldValue, setImageFile]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -81,8 +58,7 @@ const ImageUpload = ({
           errors[0]?.message ||
           "File rejected. Please upload a valid image (max 5 MB).";
         setFieldError("imageUrl", message);
-        setFieldTouched("imageUrl", true, false)
-        console.log(errors[0].message); // logs error details (too large, invalid type, etc.)
+        setFieldTouched("imageUrl", true, false);
       });
     },
   });
@@ -91,7 +67,7 @@ const ImageUpload = ({
     <div
       className={clsx(
         " flex gap-4 items-center bg-gray-100 justify-center h-24   px-1 py-1",
-        imageUrl && "flex overflow-hidden   justify-start bg-transparent"
+        preview && "flex overflow-hidden   justify-start bg-transparent"
       )}
       {...getRootProps()}
     >
@@ -104,17 +80,17 @@ const ImageUpload = ({
           <div
             className={clsx(
               " size-12 rounded-xs    flex items-center justify-center ",
-              imageUrl && "size-fit "
+              preview && "size-fit "
             )}
           >
             <img
-              src={imageUrl || "/Add Image.svg"}
+              src={preview || "/Add Image.svg"}
               alt="test"
               width={200}
               height={200}
               className={clsx(
                 "h-12  ",
-                imageUrl
+                preview
                   ? "h-20 min-w-24 sm:max-w-40 sm:h-30 rounded-sm"
                   : "h-12 w-12"
               )}
@@ -140,7 +116,7 @@ const ImageUpload = ({
           ) : (
             <p className={clsx("text-medium text-sm")}>
               <span className="text-blue-500 ">
-                click to {imageUrl ? "change" : "add"} image{" "}
+                click to {preview ? "change" : "add"} image{" "}
               </span>
               <span className="hidden sm:inline">
                 or drag and drop image here
