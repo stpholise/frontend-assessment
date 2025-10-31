@@ -61,7 +61,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
   const toast = useToast();
   const [specifications, setSpecifications] = useState<
     Record<string, string | number | boolean>
-  >(product?.specifications ?? { "": "" }); 
+  >(product?.specifications ?? { "": "" });
   const [imageFile, setImageFile] = useState<File>();
 
   const initialValues: valuesType = {
@@ -147,11 +147,12 @@ const CreateProduct = ({ product }: CreateProductProps) => {
 
   const {
     mutateAsync: uploadImage,
-    isPending: loading,
-    error: uploadError,
   } = useMutation({
     mutationFn: (file: File) => uploadToCloudinary(file),
     onError: (err) => toast.error(err.message),
+    onMutate: () => {
+      toast.info("uploading image...");
+    },
   });
 
   const validationSchema = Yup.object({
@@ -172,13 +173,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     description: Yup.string().required(
       "Description is required and must be a string"
     ),
-    imageUrl: Yup.string()
-      // .test("file-or-url", "Image is required", (value) => {
-      //   if (value instanceof File) return true;
-      //   if (typeof value === "string" && value.trim() !== "") return true;
-      //   return false;
-      // })
-      .required("Required"),
+    imageUrl: Yup.string().required("Required"),
   });
 
   const updateSpecificationKey = (oldKey: string, newKey: string) => {
@@ -227,7 +222,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
 
         if (imageFile) {
           const uploadResult = await uploadImage(imageFile);
-          uploadedImageUrl = uploadResult ?? values.imageUrl; 
+          uploadedImageUrl = uploadResult ?? values.imageUrl;
         }
         console.log(values.imageUrl);
         await updateProduct({
@@ -250,7 +245,6 @@ const CreateProduct = ({ product }: CreateProductProps) => {
         if (imageFile) {
           const uploadResult = await uploadImage(imageFile);
           uploadedImageUrl = uploadResult ?? values.imageUrl;
-           
         }
         console.log(values.imageUrl);
         await createProduct({
@@ -443,14 +437,12 @@ const CreateProduct = ({ product }: CreateProductProps) => {
                   />
                 </div>
                 <div className="">
-                  <ImageUpload 
+                  <ImageUpload
                     setFieldValue={setFieldValue}
                     setFieldError={setFieldError}
                     setFieldTouched={setFieldTouched}
                     setImageFile={setImageFile}
-                    value={values.imageUrl}
-                    loading={loading}
-                    error={uploadError}
+                    value={values.imageUrl} 
                   />
                   <ErrorMessage
                     name="imageUrl"

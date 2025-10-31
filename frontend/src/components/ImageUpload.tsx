@@ -1,21 +1,19 @@
 import React, { useCallback, type SetStateAction } from "react";
 import { useDropzone } from "react-dropzone";
 import clsx from "clsx";
-import { useToast } from "./hooks/useToast";
+// import { useToast } from "./hooks/useToast";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const ImageUpload = ({
-  loading,
-  error,
+ 
   value,
   setImageFile,
   setFieldValue,
   setFieldError,
   setFieldTouched,
 }: {
-  loading: boolean;
-  error: Error | null;
+  
   setImageFile: React.Dispatch<SetStateAction<File | undefined>>;
   setFieldValue: (
     field: string,
@@ -30,14 +28,7 @@ const ImageUpload = ({
   ) => void;
   value: string;
 }) => {
-  const toast = useToast()
-   
-  if(loading) {
-    toast.info("loading image")
-  }
-  if(error) {
-    toast.error("an error occured while uploading image ")
-  }
+ 
 
   const handleDrop = useCallback(
     (acceptedFiles: File[]) => {
