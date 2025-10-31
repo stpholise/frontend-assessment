@@ -1,20 +1,19 @@
 import React, { useCallback, type SetStateAction } from "react";
 import { useDropzone } from "react-dropzone";
 import clsx from "clsx";
+// import { useToast } from "./hooks/useToast";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const ImageUpload = ({
-  loading,
-  error,
+ 
   value,
   setImageFile,
   setFieldValue,
   setFieldError,
   setFieldTouched,
 }: {
-  loading: boolean;
-  error: Error | null;
+  
   setImageFile: React.Dispatch<SetStateAction<File | undefined>>;
   setFieldValue: (
     field: string,
@@ -29,16 +28,13 @@ const ImageUpload = ({
   ) => void;
   value: string;
 }) => {
-   
+ 
 
   const handleDrop = useCallback(
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
-      if (!file) return;
-
-      const blobUrl = URL.createObjectURL(file);
-   
-
+      if (!file) return; 
+      const blobUrl = URL.createObjectURL(file); 
       setFieldError("imageUrl", "");
       setFieldValue("imageUrl", blobUrl);
       setImageFile(file);
@@ -76,11 +72,7 @@ const ImageUpload = ({
       {...getRootProps()}
     >
       <div className=" ">
-        {loading ? (
-          <p>uploading...</p>
-        ) : error ? (
-          <div className="text-red-500 text-sm"> an error occoured </div>
-        ) : (
+    
           <div
             className={clsx(
               " size-12 rounded-xs    flex items-center justify-center ",
@@ -99,8 +91,7 @@ const ImageUpload = ({
                   : "h-12 w-12"
               )}
             />
-          </div>
-        )}
+          </div> 
       </div>
       <div className="border-b border-gray-400  py-1 cursor-pointer">
         <label

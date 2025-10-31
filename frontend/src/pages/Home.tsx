@@ -71,7 +71,7 @@ const Home = () => {
   const debouncedSearch = useDebounce(searchValue, 500);
   const [range, setRange] = useState<{
     start: number;
-    end?: number | undefined;
+    end?: string | undefined;
   }>({
     start: 0,
     end: undefined,
@@ -79,6 +79,11 @@ const Home = () => {
 
   const [sortBy, setSortBy] = useState("price");
   const [order, setOrder] = useState("asc");
+  const isValidRange = (range: { start: number; end?: string }) => {
+    if (range.end === undefined || range.end === "") return true;
+    const newEnd = Number(range.end);
+    return newEnd > 0 && newEnd > range.start;
+  };
 
   const {
     data: productsData,
@@ -90,7 +95,7 @@ const Home = () => {
       currentPage,
       itemsPerPage,
       debouncedSearch,
-      range,
+      range.end,
       sortBy,
       order,
     ],
@@ -100,10 +105,11 @@ const Home = () => {
         limit: itemsPerPage,
         search: debouncedSearch,
         minPrice: range.start,
-        maxPrice: range.end,
+        maxPrice: Number(range.end) || undefined,
         sortBy,
         order,
       }),
+    enabled: isValidRange(range),
   });
 
   const totalProducts = productsData?.totalProducts || 0;
@@ -197,7 +203,7 @@ const Home = () => {
                     const numericalValue = e.target.value.replace(/\D/g, "");
                     setRange((prev) => ({
                       ...prev,
-                      end: Number(numericalValue),
+                      end: numericalValue,
                     }));
                   }}
                 />
