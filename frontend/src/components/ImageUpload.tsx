@@ -1,13 +1,13 @@
-import React, { useCallback, type SetStateAction, useState } from "react";
+import React, { useCallback, type SetStateAction } from "react";
 import { useDropzone } from "react-dropzone";
 import clsx from "clsx";
-// import { useMutation } from "@tanstack/react-query";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const ImageUpload = ({
   loading,
   error,
+  value,
   setImageFile,
   setFieldValue,
   setFieldError,
@@ -16,16 +16,20 @@ const ImageUpload = ({
   loading: boolean;
   error: Error | null;
   setImageFile: React.Dispatch<SetStateAction<File | undefined>>;
-  setImageUrl: React.Dispatch<SetStateAction<string>>;
-  setFieldValue: (field: string, value: File, shouldValidate?: boolean) => void;
+  setFieldValue: (
+    field: string,
+    value: File | string,
+    shouldValidate?: boolean
+  ) => void;
   setFieldError: (field: string, error: string) => void;
   setFieldTouched: (
     field: string,
     touched?: boolean,
     shouldValidate?: boolean
   ) => void;
+  value: string;
 }) => {
-  const [preview, setPreviewUrl] = useState<string>("");
+   
 
   const handleDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -33,15 +37,15 @@ const ImageUpload = ({
       if (!file) return;
 
       const blobUrl = URL.createObjectURL(file);
-      setPreviewUrl(blobUrl);
+   
 
       setFieldError("imageUrl", "");
-      setFieldValue("imageUrl", file);
+      setFieldValue("imageUrl", blobUrl);
       setImageFile(file);
 
       return () => URL.revokeObjectURL(blobUrl);
     },
-    [setPreviewUrl, setFieldError, setFieldValue, setImageFile]
+    [ setFieldError, setFieldValue, setImageFile]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -67,7 +71,7 @@ const ImageUpload = ({
     <div
       className={clsx(
         " flex gap-4 items-center bg-gray-100 justify-center h-24   px-1 py-1",
-        preview && "flex overflow-hidden   justify-start bg-transparent"
+        value && "flex overflow-hidden   justify-start bg-transparent"
       )}
       {...getRootProps()}
     >
@@ -80,17 +84,17 @@ const ImageUpload = ({
           <div
             className={clsx(
               " size-12 rounded-xs    flex items-center justify-center ",
-              preview && "size-fit "
+              value && "size-fit "
             )}
           >
             <img
-              src={preview || "/Add Image.svg"}
+              src={value || "/Add Image.svg"}
               alt="test"
               width={200}
               height={200}
               className={clsx(
                 "h-12  ",
-                preview
+                value
                   ? "h-20 min-w-24 sm:max-w-40 sm:h-30 rounded-sm"
                   : "h-12 w-12"
               )}
@@ -116,7 +120,7 @@ const ImageUpload = ({
           ) : (
             <p className={clsx("text-medium text-sm")}>
               <span className="text-blue-500 ">
-                click to {preview ? "change" : "add"} image{" "}
+                click to {value ? "change" : "add"} image{" "}
               </span>
               <span className="hidden sm:inline">
                 or drag and drop image here

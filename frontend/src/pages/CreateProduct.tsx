@@ -59,13 +59,10 @@ const updateAProduct = async (id: number, product: valuesType) => {
 
 const CreateProduct = ({ product }: CreateProductProps) => {
   const toast = useToast();
-const [specifications, setSpecifications] = useState<
+  const [specifications, setSpecifications] = useState<
     Record<string, string | number | boolean>
-  >(product?.specifications ?? { "": "" });
-  const [imageUrl, setImageUrl] = useState<string>("");
+  >(product?.specifications ?? { "": "" }); 
   const [imageFile, setImageFile] = useState<File>();
-
-
 
   const initialValues: valuesType = {
     id: product?.id,
@@ -81,27 +78,21 @@ const [specifications, setSpecifications] = useState<
   };
   const isEdit = Boolean(product);
   const navigate = useNavigate();
-  const {
-    mutate: createProduct,
-  } = useMutation({
+  const { mutate: createProduct } = useMutation({
     mutationFn: (product: valuesType) => createAProduct(product),
     onSuccess: () => {
       toast.success("Product created successfully");
       navigate("/");
     },
-    onError:(err: Error) =>{
-      toast.error(err.message)
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
     onMutate: () => {
-      toast.info("Creating Product")
-    }
+      toast.info("Creating Product");
+    },
   });
 
-  const {
-    mutate: updateProduct,
-    
-    
-  } = useMutation({
+  const { mutate: updateProduct } = useMutation({
     mutationFn: ({ id, product }: { id: number; product: valuesType }) =>
       updateAProduct(id, product),
     onSuccess: () => {
@@ -112,11 +103,10 @@ const [specifications, setSpecifications] = useState<
       toast.error(err.message);
     },
     onMutate: () => {
-      toast.info('Updating product...')
-    }
+      toast.info("Updating product...");
+    },
   });
 
-  
   const uploadToCloudinary = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -130,8 +120,9 @@ const [specifications, setSpecifications] = useState<
           body: formData,
         }
       );
-      if (!response.ok){ throw new Error("Upload failed");
-        toast.error("Image upload faild")
+      if (!response.ok) {
+        throw new Error("Upload failed");
+        toast.error("Image upload faild");
       }
       const data = await response.json();
       return data.secure_url as string;
@@ -141,13 +132,13 @@ const [specifications, setSpecifications] = useState<
           throw new Error(
             "Network error: please check your internet connection"
           );
-           toast.error("Network error: please check your internet connection")
+          toast.error("Network error: please check your internet connection");
         }
         if (err.message === "Network Error") {
           throw new Error(
             "Network error: please check your internet connection"
           );
-          toast.error("Network error: please check your internet connection")
+          toast.error("Network error: please check your internet connection");
         }
         throw new Error(err.message || "An unexpected error occurred");
       }
@@ -181,13 +172,13 @@ const [specifications, setSpecifications] = useState<
     description: Yup.string().required(
       "Description is required and must be a string"
     ),
-    imageUrl: Yup.mixed().test("file-or-url", "Image is required", 
-      (value) => {
-        if (value instanceof File) return true;
-        if (typeof value === "string" && value.trim() !== "") return true;
-        return false
-      }
-    ).required("Required"),
+    imageUrl: Yup.string()
+      // .test("file-or-url", "Image is required", (value) => {
+      //   if (value instanceof File) return true;
+      //   if (typeof value === "string" && value.trim() !== "") return true;
+      //   return false;
+      // })
+      .required("Required"),
   });
 
   const updateSpecificationKey = (oldKey: string, newKey: string) => {
@@ -236,12 +227,12 @@ const [specifications, setSpecifications] = useState<
 
         if (imageFile) {
           const uploadResult = await uploadImage(imageFile);
-          uploadedImageUrl = uploadResult ?? values.imageUrl;
-          setImageUrl(uploadedImageUrl);
+          uploadedImageUrl = uploadResult ?? values.imageUrl; 
         }
+        console.log(values.imageUrl);
         await updateProduct({
           id: product?.id,
-          product: { ...values, imageUrl: imageUrl, specifications },
+          product: { ...values, imageUrl: uploadedImageUrl, specifications },
         });
 
         formik.resetForm();
@@ -259,8 +250,9 @@ const [specifications, setSpecifications] = useState<
         if (imageFile) {
           const uploadResult = await uploadImage(imageFile);
           uploadedImageUrl = uploadResult ?? values.imageUrl;
-          setImageUrl(uploadedImageUrl);
+           
         }
+        console.log(values.imageUrl);
         await createProduct({
           ...values,
           imageUrl: uploadedImageUrl,
@@ -285,7 +277,6 @@ const [specifications, setSpecifications] = useState<
 
   return (
     <div className="pb-4">
- 
       <div className="bg-white sm:hidden  w-full px-4 py-2">
         <button
           onClick={() => navigate("/")}
@@ -452,12 +443,12 @@ const [specifications, setSpecifications] = useState<
                   />
                 </div>
                 <div className="">
-                  <ImageUpload
-                    setImageUrl={setImageUrl}
+                  <ImageUpload 
                     setFieldValue={setFieldValue}
                     setFieldError={setFieldError}
                     setFieldTouched={setFieldTouched}
                     setImageFile={setImageFile}
+                    value={values.imageUrl}
                     loading={loading}
                     error={uploadError}
                   />
