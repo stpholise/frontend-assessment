@@ -5,6 +5,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import { useMutation } from "@tanstack/react-query";
 import ImageUpload from "../components/ImageUpload";
+import { useToast } from "../components/hooks/useToast";
 
 interface valuesType {
   id: number | undefined;
@@ -24,6 +25,7 @@ interface valuesType {
 interface CreateProductProps {
   product?: valuesType;
 }
+
 const createAProduct = async (product: valuesType) => {
   const res = await fetch("http://localhost:3000/api/products", {
     method: "POST",
@@ -56,6 +58,15 @@ const updateAProduct = async (id: number, product: valuesType) => {
 };
 
 const CreateProduct = ({ product }: CreateProductProps) => {
+  const toast = useToast();
+const [specifications, setSpecifications] = useState<
+    Record<string, string | number | boolean>
+  >(product?.specifications ?? { "": "" });
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File>();
+
+
+
   const initialValues: valuesType = {
     id: product?.id,
     name: product?.name || "",
@@ -72,29 +83,40 @@ const CreateProduct = ({ product }: CreateProductProps) => {
   const navigate = useNavigate();
   const {
     mutate: createProduct,
-    isPending: isLoading,
-    error,
   } = useMutation({
     mutationFn: (product: valuesType) => createAProduct(product),
-    onSuccess: () => navigate("/"),
+    onSuccess: () => {
+      toast.success("Product created successfully");
+      navigate("/");
+    },
+    onError:(err: Error) =>{
+      toast.error(err.message)
+    },
+    onMutate: () => {
+      toast.info("Creating Product")
+    }
   });
 
   const {
     mutate: updateProduct,
-    isPending: isUpdating,
-    error: updateError,
+    
+    
   } = useMutation({
     mutationFn: ({ id, product }: { id: number; product: valuesType }) =>
       updateAProduct(id, product),
-    onSuccess: () => navigate("/"),
+    onSuccess: () => {
+      toast.success("Product updated successfully");
+      navigate("/");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+    onMutate: () => {
+      toast.info('Updating product...')
+    }
   });
 
-  const [specifications, setSpecifications] = useState<
-    Record<string, string | number | boolean>
-  >(product?.specifications ?? { "": "" });
-  const [imageUrl, setImageUrl] = useState<string>("");
-  const [imageFile, setImageFile] = useState<File>();
-
+  
   const uploadToCloudinary = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -108,7 +130,9 @@ const CreateProduct = ({ product }: CreateProductProps) => {
           body: formData,
         }
       );
-      if (!response.ok) throw new Error("Upload failed");
+      if (!response.ok){ throw new Error("Upload failed");
+        toast.error("Image upload faild")
+      }
       const data = await response.json();
       return data.secure_url as string;
     } catch (err: unknown) {
@@ -117,11 +141,13 @@ const CreateProduct = ({ product }: CreateProductProps) => {
           throw new Error(
             "Network error: please check your internet connection"
           );
+           toast.error("Network error: please check your internet connection")
         }
         if (err.message === "Network Error") {
           throw new Error(
             "Network error: please check your internet connection"
           );
+          toast.error("Network error: please check your internet connection")
         }
         throw new Error(err.message || "An unexpected error occurred");
       }
@@ -134,7 +160,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     error: uploadError,
   } = useMutation({
     mutationFn: (file: File) => uploadToCloudinary(file),
-    onError: (error) => console.log(error),
+    onError: (err) => toast.error(err.message),
   });
 
   const validationSchema = Yup.object({
@@ -155,7 +181,13 @@ const CreateProduct = ({ product }: CreateProductProps) => {
     description: Yup.string().required(
       "Description is required and must be a string"
     ),
-    imageUrl: Yup.mixed().required("Required"),
+    imageUrl: Yup.mixed().test("file-or-url", "Image is required", 
+      (value) => {
+        if (value instanceof File) return true;
+        if (typeof value === "string" && value.trim() !== "") return true;
+        return false
+      }
+    ).required("Required"),
   });
 
   const updateSpecificationKey = (oldKey: string, newKey: string) => {
@@ -211,10 +243,12 @@ const CreateProduct = ({ product }: CreateProductProps) => {
           id: product?.id,
           product: { ...values, imageUrl: imageUrl, specifications },
         });
+
         formik.resetForm();
         setSpecifications({});
       } catch (err) {
         console.error(err);
+        toast.error("an error occoured");
       } finally {
         formik.setSubmitting(false);
       }
@@ -232,11 +266,13 @@ const CreateProduct = ({ product }: CreateProductProps) => {
           imageUrl: uploadedImageUrl,
           specifications,
         });
+
         formik.resetForm();
         setSpecifications({});
         navigate("/");
       } catch (err) {
         console.error(err);
+        toast.error("an error occoured");
       } finally {
         formik.setSubmitting(false);
       }
@@ -249,16 +285,7 @@ const CreateProduct = ({ product }: CreateProductProps) => {
 
   return (
     <div className="pb-4">
-      {error && <div className="text-red-500 mb-2">{error.message}</div>}
-      {isLoading && (
-        <div className="text-gray-700 mb-2">Creating product...</div>
-      )}
-      {updateError && (
-        <div className="text-red-500 mb-2">{updateError.message}</div>
-      )}
-      {isUpdating && (
-        <div className="text-gray-700 mb-2">Updating product...</div>
-      )}
+ 
       <div className="bg-white sm:hidden  w-full px-4 py-2">
         <button
           onClick={() => navigate("/")}

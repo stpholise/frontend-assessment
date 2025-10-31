@@ -1,22 +1,17 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
+import EditProduct from "./pages/EditProduct";
+import ProductDetail from "./pages/ProductDetail";
 import CreateProduct from "./pages/CreateProduct";
 import Sidebar from "./components/layouts/Sidebar";
 import Header from "./components/layouts/Header";
-import ProductDetail from "./pages/ProductDetail";
 import Cart from "./components/Cart"; 
-import EditProduct from "./pages/EditProduct";
 import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
-// import {Cloudinary} from "@cloudinary/url-gen";
+import { ToastContainer } from "react-toastify"; 
 
 function App() { 
-//  const cld = new Cloudinary({
-//     cloud: {
-//       cloudName: 'dmuhmpdkm'
-//     }
-//   });
+ 
   return (
     <>
       <Router>
